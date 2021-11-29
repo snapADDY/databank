@@ -2,7 +2,7 @@
 
 Databank is an easy-to-use Python library for making raw SQL queries in a multi-threaded environment.
 
-No ORM, no frills. Thread-safe. Only raw SQL queries and safe parameter binding. Built on top of [SQLAlchemy](https://www.sqlalchemy.org/).
+No ORM, no frills. Thread-safe. Only raw SQL queries and parameter binding. Built on top of [SQLAlchemy](https://www.sqlalchemy.org/).
 
 ## Installation
 
@@ -12,7 +12,7 @@ You can install the latest stable version from [PyPI](https://pypi.org/project/d
 $ pip install databank
 ```
 
-Adapters are not included. To work with a PostgreSQL database for example, you have to install `psycopg2` as well:
+**Adapters are not included.** To work with PostgreSQL for example, you have to install `psycopg2` as well:
 
 ```
 $ pip install psycopg2
