@@ -24,7 +24,7 @@ class Database:
         self.engine: Engine = create_engine(url, pool_size=pool_size)
         self.registry: ThreadLocalRegistry = scoped_session(sessionmaker(bind=self.engine))
 
-    def execute(self, query: str, values: Mapping = {}):
+    def execute(self, query: str, *, values: Mapping = {}):
         """Execute the given SQL query, optionally bind the values first.
 
         Parameters
@@ -38,7 +38,7 @@ class Database:
         session: Session = self.registry()
 
         # bind values to sql query
-        sql = text(query).bindparams(serialize_values(values))
+        sql = text(query).bindparams(**serialize_values(values))
 
         try:
             session.execute(sql)
@@ -62,7 +62,7 @@ class Database:
         session: Session = self.registry()
 
         # bind values to sql query
-        sql = [text(query).bindparams(params) for params in values]
+        sql = [text(query).bindparams(**params) for params in values]
 
         try:
             session.execute(sql)
@@ -86,7 +86,7 @@ class Database:
         session: Session = self.registry()
 
         # bind values to sql query
-        sql = text(query).bindparams(values)
+        sql = text(query).bindparams(**values)
 
         try:
             proxy: ResultProxy = session.execute(sql)
@@ -113,7 +113,7 @@ class Database:
         session: Session = self.registry()
 
         # bind values to sql query
-        sql = text(query).bindparams(values)
+        sql = text(query).bindparams(**values)
 
         try:
             proxy: ResultProxy = session.execute(sql)
@@ -124,7 +124,7 @@ class Database:
         else:
             session.commit()
 
-        return dict(result)
+        return [dict(row) for row in result]
 
     def fetch_all(self, query: str, *, values: Mapping = {}):
         """Execute the given SQL query, optionally bind the values, and fetch all results.
@@ -140,7 +140,7 @@ class Database:
         session: Session = self.registry()
 
         # bind values to sql query
-        sql = text(query).bindparams(values)
+        sql = text(query).bindparams(**values)
 
         try:
             proxy: ResultProxy = session.execute(sql)
