@@ -1,9 +1,10 @@
 from typing import Iterable, Mapping
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Engine, ResultProxy
+from sqlalchemy.engine import Engine, ResultProxy, RowProxy
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.util import ThreadLocalRegistry
+from sqlalchemy.sql.elements import TextClause
 
 from databank.utils import serialize_values
 
@@ -38,7 +39,7 @@ class Database:
         session: Session = self.registry()
 
         # bind values to sql query
-        sql = text(query).bindparams(**serialize_values(values))
+        sql: TextClause = text(query).bindparams(**values)
 
         try:
             session.execute(sql)
@@ -62,7 +63,7 @@ class Database:
         session: Session = self.registry()
 
         # bind values to sql query
-        sql = [text(query).bindparams(**params) for params in values]
+        sql: list[TextClause] = [text(query).bindparams(**params) for params in values]
 
         try:
             session.execute(sql)
@@ -86,18 +87,18 @@ class Database:
         session: Session = self.registry()
 
         # bind values to sql query
-        sql = text(query).bindparams(**values)
+        sql: TextClause = text(query).bindparams(**values)
 
         try:
-            proxy: ResultProxy = session.execute(sql)
-            result = proxy.fetchone()
+            result: ResultProxy = session.execute(sql)
+            row: RowProxy = result.fetchone()
         except:
             session.rollback()
             raise
         else:
             session.commit()
 
-        return dict(result)
+        return dict(row)
 
     def fetch_many(self, query: str, *, values: Mapping = {}, n: int = 1) -> dict:
         """Execute the given SQL query, optionally bind values, and fetch the first `n` results.
@@ -108,6 +109,8 @@ class Database:
             SQL query to execute.
         values : Mapping
             Values to bind to the query.
+        n : int
+            tba, by default 1.
         """
         # create thread-local session
         session: Session = self.registry()

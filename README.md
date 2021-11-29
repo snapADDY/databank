@@ -22,8 +22,8 @@ $ pip install psycopg2
 
 ```python
 >>> from databank import Database
->>> db = Database("...")
->>> db.execute("INSERT INTO table VALUES (:a, :b);", {"a": 0, "b": 1})
+>>> db = Database("postgresql://user:password@localhost/db")
+>>> db.execute("INSERT INTO table VALUES (:a, :b);", values={"a": 0, "b": 1})
 >>> db.fetch_one("SELECT * FROM table;")
 {"a": 0, "b": 1}
 ```
