@@ -1,1 +1,1 @@
-from nofrills.core import Database
+from databank.core import Database

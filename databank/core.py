@@ -9,7 +9,18 @@ from databank.utils import serialize_values
 
 
 class Database:
-    def __init__(self, url: str, pool_size: int = 20):
+    def __init__(self, url: str, pool_size: int = 10):
+        """Initialize a database connection pool.
+
+        If you are multi-threading, make sure the pool size is ≥ the number of threads.
+
+        Parameters
+        ----------
+        url : str
+            URL of the database to connect to.
+        pool_size : int, optional
+            Size of the connection pool, by default 10.
+        """
         self.engine: Engine = create_engine(url, pool_size=pool_size)
         self.registry: ThreadLocalRegistry = scoped_session(sessionmaker(bind=self.engine))
 
@@ -89,7 +100,7 @@ class Database:
         return dict(result)
 
     def fetch_many(self, query: str, *, values: Mapping = {}, n: int = 1) -> dict:
-        """Execute the given SQL query, optionally bind the values, and fetch the first `n` results.
+        """Execute the given SQL query, optionally bind values, and fetch the first `n` results.
 
         Parameters
         ----------
