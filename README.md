@@ -1,6 +1,6 @@
 # Databank
 
-Databank is an and easy-to-use Python library for making raw SQL queries in a multi-threaded environment.
+Databank is an easy-to-use Python library for making raw SQL queries in a multi-threaded environment.
 
 No ORM, no frills. Thread-safe. Only raw SQL queries and safe parameter binding. Built on top of [SQLAlchemy](https://www.sqlalchemy.org/).
 
