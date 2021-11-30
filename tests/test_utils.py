@@ -5,17 +5,20 @@ from databank.utils import serialize_param, serialize_params
 
 
 def test_serialize_params():
-    assert serialize_params(
-        {
-            "a": 0,
-            "b": "1",
-            "c": 1.0,
-            "d": True,
-            "e": datetime.now(),
-            "f": [0, 1, 2],
-            "e": {"a": 0, "b": 1},
-        }
-    ) == {"a": 0, "b": "1", "c": 1.0, "d": True, "e": '{"a": 0, "b": 1}', "f": "[0, 1, 2]"}
+    assert (
+        serialize_params(
+            {
+                "a": 0,
+                "b": "1",
+                "c": 1.0,
+                "d": True,
+                "e": datetime.now(),
+                "f": [0, 1, 2],
+                "e": {"a": 0, "b": 1},
+            }
+        )
+        == {"a": 0, "b": "1", "c": 1.0, "d": True, "e": '{"a": 0, "b": 1}', "f": "[0, 1, 2]"}
+    )
 
 
 def test_serialize_param():
