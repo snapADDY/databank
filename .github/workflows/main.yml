@@ -1,4 +1,4 @@
-name: "Build and Publish New Version"
+name: "Build"
 
 on:
   push:
@@ -19,14 +19,14 @@ jobs:
       - name: Install Poetry
         run: pip install poetry
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: poetry install
 
-      - name: Run Tests
+      - name: Run tests
         run: poetry run pytest tests
 
-      - name: Build Wheels
+      - name: Build wheels
         run: poetry build
 
-      - name: Publish Wheels
+      - name: Publish wheels
         run: poetry publish --username ${{ secrets.PYPI_USER }} --password ${{ secrets.PYPI_PW }}
