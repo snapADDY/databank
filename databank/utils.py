@@ -50,6 +50,6 @@ def serialize_param(param: Any) -> Union[str, int, float, bool]:
     elif isinstance(param, (dict, list)):
         return json.dumps(param)
     elif isinstance(param, datetime):
-        return datetime.isoformat()
+        return param.isoformat()
     else:
         raise ValueError(f"{type(param)} is not serializable")

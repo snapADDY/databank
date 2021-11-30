@@ -1,24 +1,23 @@
 from typing import Iterable, Mapping
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Engine, ResultProxy, RowProxy
+from sqlalchemy.engine import Engine, ResultProxy
+from sqlalchemy.engine.row import RowProxy
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.util import ThreadLocalRegistry
 
 
 class Database:
-    def __init__(self, url: str, pool_size: int = 10):
+    def __init__(self, url: str, **kwargs):
         """Connect to the given database.
 
         Parameters
         ----------
         url : str
             URL of the database to connect to.
-        pool_size : int, optional
-            Size of the connection pool, by default 10.
         """
-        self.engine: Engine = create_engine(url, pool_size=pool_size)
+        self.engine: Engine = create_engine(url, **kwargs)
         self.registry: ThreadLocalRegistry = scoped_session(sessionmaker(bind=self.engine))
 
     def execute(self, query: str, *, params: Mapping = {}):
@@ -58,11 +57,11 @@ class Database:
         # create thread-local session
         session: Session = self.registry()
 
-        # bind params to sql query
-        sql: list[TextClause] = [text(query).bindparams(**params) for params in params]
+        # construct executable text clause
+        sql: TextClause = text(query)
 
         try:
-            session.execute(sql)
+            session.execute(sql, params=params)
         except:
             session.rollback()
             raise
