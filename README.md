@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/databank.svg)](https://pypi.org/project/databank) ![GitHub Actions](https://github.com/snapADDY/databank/workflows/main/badge.svg)
 
-Databank is a Python library for making raw SQL queries in a multi-threaded environment.
+Databank is an easy-to-use Python library for making raw SQL queries in a multi-threaded environment.
 
 No ORM, no frills. Only raw SQL queries and parameter binding. Thread-safe. Built on top of [SQLAlchemy](https://www.sqlalchemy.org/).
 
