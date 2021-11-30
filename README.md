@@ -2,7 +2,6 @@
 
 [![PyPI](https://img.shields.io/pypi/v/databank.svg)](https://pypi.org/project/databank) ![GitHub Actions](https://github.com/snapADDY/databank/workflows/main/badge.svg)
 
-
 Databank is a Python library for making raw SQL queries in a multi-threaded environment.
 
 No ORM, no frills. Only raw SQL queries and parameter binding. Thread-safe. Built on top of [SQLAlchemy](https://www.sqlalchemy.org/).
@@ -15,7 +14,7 @@ You can install the latest stable version from [PyPI](https://pypi.org/project/d
 $ pip install databank
 ```
 
-**Adapters not included.** Install e.g. `psycopg2` for a PostgreSQL database:
+**Adapters not included.** Install e.g. `psycopg2` for PostgreSQL:
 
 ```
 $ pip install psycopg2
@@ -23,33 +22,53 @@ $ pip install psycopg2
 
 ## Usage
 
+Connect to the database of your choice:
+
 ```python
-from databank import Database
-
-# create connection pool
-db = Database("postgresql://user:password@localhost/db")
-
-# create a table
-db.execute("CREATE TABLE beatles (id SERIAL PRIMARY KEY, member TEXT NOT NULL);")
-
-# insert data
-values = [
-    {"member": "John"},
-    {"member": "Paul"},
-    {"member": "George"}
-    {"member": "Ringo"}
-]
-db.execute_many("INSERT INTO beatles (member) VALUES (:member);", values=values)
-
-# select a single row
-db.fetch_one("SELECT * FROM beatles;")
-
-
-# select the two rows
-db.fetch_many("SELECT * FROM beatles;", n=2)
-
-# select all rows
-db.fetch_all("SELECT * FROM beatles;")
+>>> from databank import Database
+>>> db = Database("postgresql://user:password@localhost/db", pool_size=2)
 ```
 
-If you are using `databank` in a multi-threaded environment (e.g. in a web application), make sure the pool size is at least the number of threads.
+The keyword arguments are passed directly to SQLAlchemy's `create_engine()` function. Depending on the database you connect to, you have options like setting the size of connection pools. If you are using `databank` in a multi-threaded environment (e.g. in a web application), make sure the pool size is at least the number of threads.
+
+Let's create a simple table:
+
+```python
+>>> db.execute("CREATE TABLE beatles (id SERIAL PRIMARY KEY, member TEXT NOT NULL);")
+```
+
+You can insert multiple rows at once:
+
+```python
+>>> params = [
+...     {"id": 0, "member": "John"},
+...     {"id": 1, "member": "Paul"},
+...     {"id": 2, "member": "George"},
+...     {"id": 3, "member": "Ringo"}
+... ]
+>>> db.execute_many("INSERT INTO beatles (id, member) VALUES (:id, :member);", params)
+```
+
+Fetch a single row:
+
+```python
+>>> db.fetch_one("SELECT * FROM beatles;")
+{'id': 0, 'member': 'John'}
+```
+
+But you can also fetch `n` rows:
+
+```python
+>>> db.fetch_many("SELECT * FROM beatles;", n=2)
+[{'id': 0, 'member': 'John'}, {'id': 1, 'member': 'Paul'}]
+```
+
+Or if you want _all_ rows:
+
+```python
+>>> db.fetch_all("SELECT * FROM beatles;")
+[{'id': 0, 'member': 'John'},
+ {'id': 1, 'member': 'Paul'},
+ {'id': 2, 'member': 'George'},
+ {'id': 3, 'member': 'Ringo'}]
+```
