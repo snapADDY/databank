@@ -19,6 +19,12 @@ jobs:
       - name: Install Poetry
         run: pip install poetry
 
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: Run Tests
+        run: pytest tests
+
       - name: Build Wheels
         run: poetry build
 
