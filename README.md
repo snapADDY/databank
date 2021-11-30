@@ -65,7 +65,7 @@ But you can also fetch `n` rows:
 [{'id': 0, 'member': 'John'}, {'id': 1, 'member': 'Paul'}]
 ```
 
-Or if you want _all_ rows:
+Or all rows:
 
 ```python
 >>> db.fetch_all("SELECT * FROM beatles;")

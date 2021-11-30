@@ -20,7 +20,7 @@ class Database:
         self.engine: Engine = create_engine(url, **kwargs)
         self.registry: ThreadLocalRegistry = scoped_session(sessionmaker(bind=self.engine))
 
-    def execute(self, query: str, *, params: Mapping = {}):
+    def execute(self, query: str, params: Mapping = {}):
         """Execute the given SQL query, optionally bind the params first.
 
         Parameters
@@ -44,7 +44,7 @@ class Database:
         else:
             session.commit()
 
-    def execute_many(self, query: str, *, params: Iterable[Mapping] = []):
+    def execute_many(self, query: str, params: Iterable[Mapping] = []):
         """Execute the given SQL query many times, optionally bind the iterable of params first.
 
         Parameters
@@ -68,7 +68,7 @@ class Database:
         else:
             session.commit()
 
-    def fetch_one(self, query: str, *, params: Mapping = {}) -> dict:
+    def fetch_one(self, query: str, params: Mapping = {}) -> dict:
         """Execute the given SQL query, optionally bind the params, and fetch the first result.
 
         Parameters
@@ -95,7 +95,7 @@ class Database:
 
         return dict(row)
 
-    def fetch_many(self, query: str, *, params: Mapping = {}, n: int = 1) -> dict:
+    def fetch_many(self, query: str, params: Mapping = {}, n: int = 1) -> dict:
         """Execute the given SQL query, optionally bind params, and fetch the first `n` results.
 
         Parameters
@@ -124,7 +124,7 @@ class Database:
 
         return [dict(row) for row in result]
 
-    def fetch_all(self, query: str, *, params: Mapping = {}):
+    def fetch_all(self, query: str, params: Mapping = {}):
         """Execute the given SQL query, optionally bind the params, and fetch all results.
 
         Parameters
