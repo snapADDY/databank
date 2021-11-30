@@ -1,6 +1,6 @@
 # Databank
 
-[![PyPI](https://img.shields.io/pypi/v/databank.svg)](https://pypi.org/project/databank) ![GitHub Actions](https://github.com/snapADDY/databank/workflows/main/badge.svg)
+[![PyPI](https://img.shields.io/pypi/v/databank.svg)](https://pypi.org/project/databank) ![GitHub Actions](https://github.com/snapADDY/databank/actions/workflows/main.yml/badge.svg)
 
 Databank is an easy-to-use Python library for making raw SQL queries in a multi-threaded environment.
 
