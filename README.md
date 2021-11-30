@@ -2,9 +2,11 @@
 
 [![PyPI](https://img.shields.io/pypi/v/databank.svg)](https://pypi.org/project/databank) ![GitHub Actions](https://github.com/snapADDY/databank/actions/workflows/main.yml/badge.svg)
 
-Databank is an easy-to-use Python library for making raw SQL queries in a multi-threaded environment. No ORM, no frills. Only raw SQL queries and parameter binding. Thread-safe. Built on top of [SQLAlchemy](https://www.sqlalchemy.org/).
+Databank is an easy-to-use Python library for making raw SQL queries in a multi-threaded environment.
 
-<a data-flickr-embed="true" href="https://www.flickr.com/photos/mratzloff/9169294489/" title="IBM System/360 Model 91"><img src="https://live.staticflickr.com/7328/9169294489_ba900907f1_b.jpg" width="1024" height="678" alt="IBM System/360 Model 91"></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
+No ORM, no frills. Only raw SQL queries and parameter binding. Thread-safe. Built on top of [SQLAlchemy](https://www.sqlalchemy.org/).
+
+[![IBM System/360 Model 91](https://live.staticflickr.com/7328/9169294489_ba900907f1_b.jpg)](https://www.flickr.com/photos/mratzloff/9169294489/)
 
 (The photo was taken by [Matthew Ratzloff](https://www.flickr.com/photos/mratzloff/) and is licensed under CC BY-NC-ND 2.0.)
 ## Installation
