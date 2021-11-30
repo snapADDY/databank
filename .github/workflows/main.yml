@@ -23,7 +23,7 @@ jobs:
         run: poetry install
 
       - name: Run Tests
-        run: pytest tests
+        run: poetry run pytest tests
 
       - name: Build Wheels
         run: poetry build
