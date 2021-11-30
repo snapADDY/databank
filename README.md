@@ -8,7 +8,7 @@ No ORM, no frills. Only raw SQL queries and parameter binding. Thread-safe. Buil
 
 ## Installation
 
-You can install the latest stable version from [PyPI](https://pypi.org/project/databank/)
+You can install the latest stable version from [PyPI](https://pypi.org/project/databank/):
 
 ```
 $ pip install databank
@@ -29,7 +29,7 @@ Connect to the database of your choice:
 >>> db = Database("postgresql://user:password@localhost/db", pool_size=2)
 ```
 
-The keyword arguments are passed directly to SQLAlchemy's `create_engine()` function. Depending on the database you connect to, you have options like setting the size of connection pools.
+The keyword arguments are passed directly to SQLAlchemy's `create_engine()` function. Depending on the database you connect to, you have options like the size of connection pools.
 
 > If you are using `databank` in a multi-threaded environment (e.g. in a web application), make sure the pool size is at least the number of threads.
 
