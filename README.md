@@ -29,7 +29,9 @@ Connect to the database of your choice:
 >>> db = Database("postgresql://user:password@localhost/db", pool_size=2)
 ```
 
-The keyword arguments are passed directly to SQLAlchemy's `create_engine()` function. Depending on the database you connect to, you have options like setting the size of connection pools. If you are using `databank` in a multi-threaded environment (e.g. in a web application), make sure the pool size is at least the number of threads.
+The keyword arguments are passed directly to SQLAlchemy's `create_engine()` function. Depending on the database you connect to, you have options like setting the size of connection pools.
+
+> If you are using `databank` in a multi-threaded environment (e.g. in a web application), make sure the pool size is at least the number of threads.
 
 Let's create a simple table:
 
