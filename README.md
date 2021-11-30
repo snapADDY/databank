@@ -32,7 +32,7 @@ Connect to the database of your choice:
 
 The keyword arguments are passed directly to SQLAlchemy's `create_engine()` function. Depending on the database you connect to, you have options like the size of connection pools.
 
-> If you are using `databank` in a multi-threaded environment (e.g. in a web application), make sure the pool size is at least the number of threads.
+> If you are using `databank` in a multi-threaded environment (e.g. in a web application), make sure the pool size is at least the number of worker threads.
 
 Let's create a simple table:
 
