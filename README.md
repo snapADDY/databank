@@ -74,3 +74,11 @@ Or all rows:
  {'id': 2, 'member': 'George'},
  {'id': 3, 'member': 'Ringo'}]
 ```
+
+If you are using PostgreSQL with `jsonb` columns, you can use a helper function to serialize the parameter values:
+
+```python
+>>> from databank.utils import serialize_params
+>>> serialize_params({"member": "Ringo", "song": ["Don't Pass Me By", "Octopus's Garden"]})
+{'member': 'Ringo', 'song': '["Don\'t Pass Me By", "Octopus\'s Garden"]'}
+```

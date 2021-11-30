@@ -2,8 +2,10 @@ import json
 from datetime import datetime
 from typing import Any, Union
 
+# supported types for a row value
+Value = Union[str, int, float, bool, tuple, datetime]
 
-def serialize_params(params: dict[str, Any]) -> dict[str, Union[str, int, float, bool]]:
+def serialize_params(params: dict[str, Any]) -> dict[str, Value]:
     """Serialize the given parameters to supported data types.
 
     Note
@@ -17,13 +19,13 @@ def serialize_params(params: dict[str, Any]) -> dict[str, Union[str, int, float,
 
     Returns
     -------
-    dict[str, Union[str, int, float, bool]]
+    dict[str, Value]
         Parameters serialized as string, integer, float or boolean.
     """
     return {key: serialize_param(value) for key, value in params.items()}
 
 
-def serialize_param(param: Any) -> Union[str, int, float, bool]:
+def serialize_param(param: Any) -> Value:
     """Serialize the given parameter to a supported data type.
 
     Note
@@ -42,14 +44,12 @@ def serialize_param(param: Any) -> Union[str, int, float, bool]:
 
     Returns
     -------
-    Union[str, int, float, bool]
+    Value
         Serialized parameter.
     """
-    if isinstance(param, (str, int, float, bool)):
+    if isinstance(param, (str, int, float, bool, tuple, datetime)):
         return param
     elif isinstance(param, (dict, list)):
         return json.dumps(param)
-    elif isinstance(param, datetime):
-        return param.isoformat()
     else:
         raise ValueError(f"{type(param)} is not serializable")
