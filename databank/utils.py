@@ -3,40 +3,53 @@ from datetime import datetime
 from typing import Any, Union
 
 
-def serialize_values(values: dict[str, Any]) -> dict[str, Union[str, int, float, bool]]:
-    """Serialize the values of the given dictionary.
+def serialize_params(params: dict[str, Any]) -> dict[str, Union[str, int, float, bool]]:
+    """Serialize the given parameters to supported data types.
+
+    Note
+    ----
+    Dictionaries and lists are serialized as JSON.
 
     Parameters
     ----------
-    values : dict[str, Any]
-        tba.
+    params : dict[str, Any]
+        Parameters to serialize.
 
     Returns
     -------
     dict[str, Union[str, int, float, bool]]
-        tba.
+        Parameters serialized as string, integer, float or boolean.
     """
-    return {key: serialize_item(item) for key, item in values.items()}
+    return {key: serialize_param(value) for key, value in params.items()}
 
 
-def serialize_item(item: Any) -> Union[str, int, float, bool]:
-    """Serialize the given item.
+def serialize_param(param: Any) -> Union[str, int, float, bool]:
+    """Serialize the given parameter to a supported data type.
+
+    Note
+    ----
+    Dictionaries and lists are serialized as JSON.
 
     Parameters
     ----------
-    item : Any
-        Item to serialize.
+    param : Any
+        Parameter to serialize.
+
+    Raises
+    ------
+    ValueError
+        If the given parameter is not serializable.
 
     Returns
     -------
     Union[str, int, float, bool]
-        Valid item.
+        Serialized parameter.
     """
-    if isinstance(item, (str, int, float, bool)):
-        return item
-    elif isinstance(item, (dict, list)):
-        return json.dumps(item)
-    elif isinstance(item, datetime):
+    if isinstance(param, (str, int, float, bool)):
+        return param
+    elif isinstance(param, (dict, list)):
+        return json.dumps(param)
+    elif isinstance(param, datetime):
         return datetime.isoformat()
     else:
-        raise ValueError(f"{type(item)} is no supported type")
+        raise ValueError(f"{type(param)} is not serializable")
