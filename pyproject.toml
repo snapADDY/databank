@@ -1,7 +1,8 @@
 [tool.poetry]
 name = "databank"
-version = "0.1.0"
-description = "tba"
+version = "0.1.1"
+description = "Databank is an easy-to-use Python library for making raw SQL queries in a multi-threaded environment."
+readme = "README.md"
 authors = ["snapADDY GmbH <info@snapaddy.com>"]
 
 [tool.poetry.dependencies]
