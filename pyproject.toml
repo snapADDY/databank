@@ -11,7 +11,9 @@ sqlalchemy = "^1.4.27"
 [tool.poetry.dev-dependencies]
 black = "^21.11b1"
 isort = "^5.10.1"
-pytest-postgresql = "^4.0.0"
+
+[tool.black]
+line-length = 99
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
