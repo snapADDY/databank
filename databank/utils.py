@@ -51,5 +51,7 @@ def serialize_param(param: Any) -> Value:
         return param
     elif isinstance(param, (dict, list)):
         return json.dumps(param)
+    elif param is None:
+        return None
     else:
         raise ValueError(f"{type(param)} is not serializable")
