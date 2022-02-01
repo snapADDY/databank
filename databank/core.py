@@ -93,7 +93,7 @@ class Database:
         else:
             session.commit()
 
-        return dict(row)
+        return dict(row) if row else {}
 
     def fetch_many(self, query: str, params: Mapping = {}, n: int = 1) -> dict:
         """Execute the given SQL query, optionally bind params, and fetch the first `n` results.
@@ -122,7 +122,7 @@ class Database:
         else:
             session.commit()
 
-        return [dict(row) for row in result]
+        return [dict(row) for row in result if row]
 
     def fetch_all(self, query: str, params: Mapping = {}):
         """Execute the given SQL query, optionally bind the params, and fetch all results.
@@ -149,4 +149,4 @@ class Database:
         else:
             session.commit()
 
-        return [dict(row) for row in result]
+        return [dict(row) for row in result if row]
