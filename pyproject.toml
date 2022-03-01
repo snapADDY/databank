@@ -7,7 +7,7 @@ authors = ["snapADDY GmbH <info@snapaddy.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-sqlalchemy = "^1.4.27"
+sqlalchemy = "^1.4.31"
 
 [tool.poetry.dev-dependencies]
 black = "^21.11b1"
