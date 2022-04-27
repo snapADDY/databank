@@ -96,6 +96,7 @@ class Database:
             self.session.remove()
             raise
         else:
+            self.session.commit()
             self.session.remove()
 
         return dict(row) if row else {}
@@ -126,6 +127,7 @@ class Database:
             self.session.remove()
             raise
         else:
+            self.session.commit()
             self.session.remove()
 
         return [dict(row) for row in result if row]
@@ -154,6 +156,7 @@ class Database:
             self.session.remove()
             raise
         else:
+            self.session.commit()
             self.session.remove()
 
         return [dict(row) for row in result if row]
