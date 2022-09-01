@@ -160,3 +160,32 @@ class Database:
             self.session.remove()
 
         return [dict(row) for row in result if row]
+
+    def execute_fetch_all(self, query: str, params: Iterable[Mapping] = []):
+        """Execute multiple SQL queries, optionally bind params, fetch all results of last query.
+
+        Parameters
+        ----------
+        query : str
+            SQL query to execute.
+        params : Iterable[Mapping]
+            Iterable of params to bind to the query.
+        """
+        # create thread-local session
+        self.session()
+
+        # construct executable text clause
+        sql: TextClause = text(query)
+
+        try:
+            proxy: ResultProxy = self.session.execute(sql, params=params)
+            result = proxy.fetchall()
+        except:
+            self.session.rollback()
+            self.session.remove()
+            raise
+        else:
+            self.session.commit()
+            self.session.remove()
+
+        return [dict(row) for row in result if row]
