@@ -101,7 +101,7 @@ class Database:
 
         return dict(row) if row else {}
 
-    def fetch_many(self, query: str, params: Mapping = {}, n: int = 1) -> dict:
+    def fetch_many(self, query: str, params: Mapping = {}, n: int = 1) -> list[dict]:
         """Execute the given SQL query, optionally bind params, and fetch the first `n` results.
 
         Parameters
@@ -132,7 +132,7 @@ class Database:
 
         return [dict(row) for row in result if row]
 
-    def fetch_all(self, query: str, params: Mapping = {}):
+    def fetch_all(self, query: str, params: Mapping = {}) -> list[dict]:
         """Execute the given SQL query, optionally bind the params, and fetch all results.
 
         Parameters
@@ -150,6 +150,95 @@ class Database:
 
         try:
             proxy: ResultProxy = self.session.execute(sql)
+            result = proxy.fetchall()
+        except:
+            self.session.rollback()
+            self.session.remove()
+            raise
+        else:
+            self.session.commit()
+            self.session.remove()
+
+        return [dict(row) for row in result if row]
+
+    def execute_fetch_one(self, query: str, params: Iterable[Mapping] = []) -> dict:
+        """Execute multiple SQL queries, optionally bind params, fetch first result of last query.
+
+        Parameters
+        ----------
+        query : str
+            SQL query to execute.
+        params : Iterable[Mapping]
+            Iterable of params to bind to the query.
+        """
+        # create thread-local session
+        self.session()
+
+        # construct executable text clause
+        sql: TextClause = text(query)
+
+        try:
+            proxy: ResultProxy = self.session.execute(sql, params=params)
+            row: RowProxy = proxy.fetchone()
+        except:
+            self.session.rollback()
+            self.session.remove()
+            raise
+        else:
+            self.session.commit()
+            self.session.remove()
+
+        return dict(row) if row else {}
+
+    def execute_fetch_many(self, query: str, params: Iterable[Mapping] = [], n: int = 1) -> list[dict]:
+        """Execute multiple SQL queries, optionally bind params, fetch first `n` results of last query.
+
+        Parameters
+        ----------
+        query : str
+            SQL query to execute.
+        params : Iterable[Mapping]
+            Iterable of params to bind to the query.
+        n : int
+            Number of rows to fetch, by default 1.
+        """
+        # create thread-local session
+        self.session()
+
+        # construct executable text clause
+        sql: TextClause = text(query)
+
+        try:
+            proxy: ResultProxy = self.session.execute(sql, params=params)
+            result = proxy.fetchmany(n)
+        except:
+            self.session.rollback()
+            self.session.remove()
+            raise
+        else:
+            self.session.commit()
+            self.session.remove()
+
+        return [dict(row) for row in result if row]
+
+    def execute_fetch_all(self, query: str, params: Iterable[Mapping] = []) -> list[dict]:
+        """Execute multiple SQL queries, optionally bind params, fetch all results of last query.
+
+        Parameters
+        ----------
+        query : str
+            SQL query to execute.
+        params : Iterable[Mapping]
+            Iterable of params to bind to the query.
+        """
+        # create thread-local session
+        self.session()
+
+        # construct executable text clause
+        sql: TextClause = text(query)
+
+        try:
+            proxy: ResultProxy = self.session.execute(sql, params=params)
             result = proxy.fetchall()
         except:
             self.session.rollback()
