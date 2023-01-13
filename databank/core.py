@@ -3,9 +3,8 @@ from typing import Iterable, Mapping
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, ResultProxy
 from sqlalchemy.engine.row import RowProxy
-from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.sql.elements import TextClause
-from sqlalchemy.util import ThreadLocalRegistry
 
 
 class Database:
