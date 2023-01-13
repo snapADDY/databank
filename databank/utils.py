@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from typing import Any, Mapping, Union
+from typing import Any, Mapping, Optional, Union
 
 from sqlalchemy import text
 from sqlalchemy.engine.interfaces import Dialect
@@ -61,7 +61,7 @@ def serialize_param(param: Any) -> Value:
         raise ValueError(f"{type(param)} is not serializable")
 
 
-def compile_sql(query: str, params: Mapping = {}, dialect: Dialect | None = None) -> str:
+def compile_sql(query: str, params: Mapping = {}, dialect: Optional[Dialect] = None) -> str:
     """Compile the given query and bind the parameters to get the actual SQL query.
 
     Parameters
@@ -70,7 +70,7 @@ def compile_sql(query: str, params: Mapping = {}, dialect: Dialect | None = None
         SQL query to execute.
     params : Mapping
         Parameters to bind to the query.
-    dialect : Dialect | None
+    dialect : Optional[Dialect]
         SQL dialect.
 
     Returns
