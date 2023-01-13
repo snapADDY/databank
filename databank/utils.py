@@ -1,9 +1,10 @@
 import json
 from datetime import datetime
 from typing import Any, Mapping, Union
+
 from sqlalchemy import text
-from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.engine.interfaces import Dialect
+from sqlalchemy.sql.elements import TextClause
 
 # supported types for a row value
 Value = Union[str, int, float, bool, tuple, datetime]
