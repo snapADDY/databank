@@ -98,7 +98,7 @@ class Database:
             self.session.commit()
             self.session.remove()
 
-        return dict(row) if row else {}
+        return row._asdict() if row else {}
 
     def fetch_many(self, query: str, params: Mapping = {}, n: int = 1) -> list[dict]:
         """Execute the given SQL query, optionally bind params, and fetch the first `n` results.
@@ -129,7 +129,7 @@ class Database:
             self.session.commit()
             self.session.remove()
 
-        return [dict(row) for row in result if row]
+        return [row._asdict() for row in result if row]
 
     def fetch_all(self, query: str, params: Mapping = {}) -> list[dict]:
         """Execute the given SQL query, optionally bind the params, and fetch all results.
@@ -158,7 +158,7 @@ class Database:
             self.session.commit()
             self.session.remove()
 
-        return [dict(row) for row in result if row]
+        return [row._asdict() for row in result if row]
 
     def execute_fetch_one(self, query: str, params: Iterable[Mapping] = []) -> dict:
         """Execute multiple SQL queries, optionally bind params, fetch first result of last query.
@@ -187,7 +187,7 @@ class Database:
             self.session.commit()
             self.session.remove()
 
-        return dict(row) if row else {}
+        return row._asdict() if row else {}
 
     def execute_fetch_many(self, query: str, params: Iterable[Mapping] = [], n: int = 1) -> list[dict]:
         """Execute multiple SQL queries, optionally bind params, fetch first `n` results of last query.
@@ -218,7 +218,7 @@ class Database:
             self.session.commit()
             self.session.remove()
 
-        return [dict(row) for row in result if row]
+        return [row._asdict() for row in result if row]
 
     def execute_fetch_all(self, query: str, params: Iterable[Mapping] = []) -> list[dict]:
         """Execute multiple SQL queries, optionally bind params, fetch all results of last query.
@@ -247,4 +247,4 @@ class Database:
             self.session.commit()
             self.session.remove()
 
-        return [dict(row) for row in result if row]
+        return [row._asdict() for row in result if row]
