@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any, Mapping, Optional, Union
 
 from sqlalchemy import text
@@ -7,7 +7,7 @@ from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.sql.elements import TextClause
 
 # supported types for a row value
-Value = Union[str, int, float, bool, tuple, datetime]
+Value = Union[str, int, float, bool, tuple, datetime, date]
 
 def serialize_params(params: dict[str, Any]) -> dict[str, Value]:
     """Serialize the given parameters to supported data types.
@@ -51,7 +51,7 @@ def serialize_param(param: Any) -> Value:
     Value
         Serialized parameter.
     """
-    if isinstance(param, (str, int, float, bool, tuple, datetime)):
+    if isinstance(param, (str, int, float, bool, tuple, datetime, date)):
         return param
     elif isinstance(param, (dict, list)):
         return json.dumps(param)
