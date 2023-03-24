@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, date
 
 from databank.utils import compile_sql, serialize_param
 
@@ -13,6 +13,7 @@ def test_serialize_param():
     assert serialize_param([0]) == json.dumps([0])
     assert serialize_param(datetime(1970, 1, 1)) == datetime(1970, 1, 1)
     assert serialize_param((0, 1, 2)) == (0, 1, 2)
+    assert serialize_param(date(1970, 1, 1)) == date(1970, 1, 1)
 
 
 def test_compile_sql():
