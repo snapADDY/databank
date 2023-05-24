@@ -85,3 +85,31 @@ If you are using PostgreSQL with `jsonb` columns, you can use a helper function 
 >>> serialize_params({"member": "Ringo", "song": ["Don't Pass Me By", "Octopus's Garden"]})
 {'member': 'Ringo', 'song': '["Don\'t Pass Me By", "Octopus\'s Garden"]'}
 ```
+
+## Query Collection
+
+You can also organize SQL queries in an SQL file and load them into a `QueryCollection`:
+
+```sql
+/* @name insert_data */
+INSERT INTO beatles (id, member) VALUES (:id, :member);
+
+/* @name select_all_data */
+SELECT * FROM beatles;
+```
+
+A query _must_ have a header comment with the name of the query. If a query name is not unique, the last query with the same name will be used. You can parse that file and load the queries into a `QueryCollection`:
+
+```python
+>>> from databank import QueryCollection
+>>> queries = QueryCollection.from_file("queries.sql")
+```
+
+and access the queries like in a dictionary:
+
+```python
+>>> queries["insert_data"]
+'INSERT INTO beatles (id, member) VALUES (:id, :member);'
+>>> queries["select_all_data"]
+'SELECT * FROM beatles;'
+```
