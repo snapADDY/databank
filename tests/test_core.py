@@ -1,6 +1,8 @@
+from pathlib import Path
+
 import pytest
 
-from databank import Database
+from databank import Database, QueryCollection
 
 
 @pytest.fixture
@@ -12,6 +14,12 @@ def database():
     params = [{"member": "John"}, {"member": "Paul"}, {"member": "George"}, {"member": "Ringo"}]
     db.execute_many("INSERT INTO beatles (member) VALUES (:member);", params=params)
     yield db
+
+
+@pytest.fixture
+def queries() -> QueryCollection:
+    filepath = Path(__file__).parent / "queries.sql"
+    return QueryCollection.from_file(filepath)
 
 
 def test_execute(database: Database):
@@ -36,3 +44,7 @@ def test_fetch_many(database: Database):
 
 def test_fetch_all(database: Database):
     assert len(database.fetch_all("SELECT * FROM beatles;")) == 4
+
+
+def test_fetch_all_from_query_collection(database: Database, queries: QueryCollection):
+    assert len(database.fetch_all(queries["select_all_data"])) == 4

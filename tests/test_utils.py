@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, date
+from datetime import date, datetime
 
 from databank.utils import compile_sql, serialize_param
 
