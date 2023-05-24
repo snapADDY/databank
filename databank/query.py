@@ -58,6 +58,16 @@ class QueryCollection:
             queries[header["name"]] = "\n".join(_lines[1:]).strip()
 
         return cls(queries)
+    
+    def __repr__(self) -> str:
+        """Get the string representation of this collection.
+
+        Returns
+        -------
+        str
+            String representation of this collection.
+        """
+        return f"<QueryCollection ({len(self)} queries): {list(self._queries)}>"
 
     def __len__(self) -> int:
         """Get the number of queries in this collection.
