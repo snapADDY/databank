@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from databank import QueryCollection
+from databank.query import QueryCollection, is_valid_query_header
 
 
 @pytest.fixture
@@ -18,3 +18,11 @@ def test_query_collection(queries: QueryCollection):
 
     with pytest.raises(KeyError):
         queries["invalid"]
+
+
+def test_is_valid_query_header():
+    assert is_valid_query_header("/* @name foo */")
+    assert not is_valid_query_header("/* name: foo bar */")
+    assert not is_valid_query_header("/** @name foo **/")
+    assert not is_valid_query_header("/* @name foo bar */")
+    assert not is_valid_query_header("-- @name: foo")
