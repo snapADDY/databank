@@ -1,10 +1,13 @@
 from os import PathLike
+import re
 from pathlib import Path
 
 
 # queries are separated by two newlines
 QUERY_SEPARATOR = "\n\n"
 
+# pattern a query header must match
+_HEADER_PATTERN = re.compile(r'/\*\s@name\s\w+\s\*/')
 
 class InvalidQueryHeader(Exception):
     ...
@@ -116,7 +119,7 @@ def is_valid_query_header(header: str) -> bool:
     bool
         True if the header is valid, False otherwise.
     """
-    return header.startswith("/*") and header.endswith("*/") and "@name" in header
+    return _HEADER_PATTERN.fullmatch(header) is not None
 
 
 def parse_header(header: str) -> dict[str, str]:
