@@ -1,13 +1,13 @@
-from os import PathLike
 import re
+from os import PathLike
 from pathlib import Path
-
 
 # queries are separated by two newlines
 QUERY_SEPARATOR = "\n\n"
 
 # pattern a query header must match
-_HEADER_PATTERN = re.compile(r'/\*\s@name\s\w+\s\*/')
+_HEADER_PATTERN = re.compile(r"/\*\s@name\s\w+\s\*/")
+
 
 class InvalidQueryHeader(Exception):
     ...
@@ -61,7 +61,7 @@ class QueryCollection:
             queries[header["name"]] = "\n".join(_lines[1:]).strip()
 
         return cls(queries)
-    
+
     def __repr__(self) -> str:
         """Get the string representation of this collection.
 
