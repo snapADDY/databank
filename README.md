@@ -98,6 +98,8 @@ INSERT INTO beatles (id, member) VALUES (:id, :member);
 SELECT * FROM beatles;
 ```
 
+> This idea is borrowed from [PgTyped](https://pgtyped.dev/docs/sql-file)
+
 A query _must_ have a header comment with the name of the query. If a query name is not unique, the last query with the same name will be used. You can parse that file and load the queries into a `QueryCollection`:
 
 ```python
