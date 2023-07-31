@@ -73,6 +73,8 @@ class Database:
             SQL query to execute.
         params : Iterable[Mapping]
             Iterable of params to bind to the query.
+        in_background : bool
+            If True, execute the query in the background, by default False.
         """
         if in_background:
             # run query in background thread
