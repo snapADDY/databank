@@ -20,7 +20,7 @@ class Database:
         self.engine: Engine = create_engine(url, **kwargs)
         self.session: scoped_session = scoped_session(sessionmaker(bind=self.engine))
 
-    def execute(self, query: str, params: Mapping = {}, in_background: bool = False):
+    def execute(self, query: str, params: Mapping = {}, *, in_background: bool = False):
         """Execute and commit the given SQL query, optionally bind the params first.
 
         Parameters
@@ -64,7 +64,7 @@ class Database:
             self.session.commit()
             self.session.remove()
 
-    def execute_many(self, query: str, params: Iterable[Mapping] = [], in_background: bool = False):
+    def execute_many(self, query: str, params: Iterable[Mapping] = [], *, in_background: bool = False):
         """Execute and commit multiple SQL queries, optionally bind the iterable of params first.
 
         Parameters
