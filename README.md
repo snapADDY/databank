@@ -86,6 +86,18 @@ If you are using PostgreSQL with `jsonb` columns, you can use a helper function 
 {'member': 'Ringo', 'song': '["Don\'t Pass Me By", "Octopus\'s Garden"]'}
 ```
 
+### Executing Queries in the Background
+
+For both `execute()` and `execute_many()` you can pass an `in_background` keyword argument (which is by default `False`). If set to `True`, the query will be executed in the background in another thread and the method will return immediately the `Thread` object (i.e. non-blocking). You can call `join()` on that object to wait for the query to finish or just do nothing and go on:
+
+```python
+>>> db.execute("INSERT INTO beatles (id, member) VALUES (:id, :member);", {"id": 4, "member": "Klaus"}, in_background=True)
+<Thread(Thread-1 (_execute), started 140067398776512)>
+```
+
+Beware that if you are using `in_background=True`, you have to make sure that the connection pool size is large enough to handle the number of concurrent queries and that your program is running long enough if you are not explicitly waiting for the thread to finish. Also note that this might lead to a range of other issues like locking, reduced performance or even deadlocks. You also might want to set an explicit timeout for queries by passing e.g. `{"options": "-c statement_timeout=60000"}` for PostgreSQL when initializing the `Database` object to kill all queries taking longer than 60 seconds.
+
+
 ## Query Collection
 
 You can also organize SQL queries in an SQL file and load them into a `QueryCollection`:

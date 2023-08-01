@@ -1,3 +1,4 @@
+from threading import Thread
 from typing import Iterable, Mapping
 
 from sqlalchemy import create_engine, text
@@ -19,7 +20,38 @@ class Database:
         self.engine: Engine = create_engine(url, **kwargs)
         self.session: scoped_session = scoped_session(sessionmaker(bind=self.engine))
 
-    def execute(self, query: str, params: Mapping = {}):
+    def execute(
+        self,
+        query: str,
+        params: Mapping = {},
+        *,
+        in_background: bool = False,
+    ) -> Thread | None:
+        """Execute and commit the given SQL query, optionally bind the params first.
+
+        Parameters
+        ----------
+        query : str
+            SQL query to execute.
+        params : Mapping
+            Parameters to bind to the query.
+        in_background : bool
+            If True, execute the query in the background, by default False.
+
+        Returns
+        -------
+        Thread | None
+            If `in_background` is True, returns the `Thread` object, otherwise nothing.
+        """
+        if in_background:
+            # run query in background thread and return thread object
+            thread = Thread(target=self._execute, args=(query, params))
+            thread.start()
+            return thread
+        else:
+            self._execute(query, params)
+
+    def _execute(self, query: str, params: Mapping = {}):
         """Execute and commit the given SQL query, optionally bind the params first.
 
         Parameters
@@ -45,7 +77,38 @@ class Database:
             self.session.commit()
             self.session.remove()
 
-    def execute_many(self, query: str, params: Iterable[Mapping] = []):
+    def execute_many(
+        self,
+        query: str,
+        params: Iterable[Mapping] = [],
+        *,
+        in_background: bool = False,
+    ) -> Thread | None:
+        """Execute and commit multiple SQL queries, optionally bind the iterable of params first.
+
+        Parameters
+        ----------
+        query : str
+            SQL query to execute.
+        params : Iterable[Mapping]
+            Iterable of params to bind to the query.
+        in_background : bool
+            If True, execute the query in the background, by default False.
+
+        Returns
+        -------
+        Thread | None
+            If `in_background` is True, returns the `Thread` object, otherwise nothing.
+        """
+        if in_background:
+            # run query in background thread and return thread object
+            thread = Thread(target=self._execute_many, args=(query, params))
+            thread.start()
+            return thread
+        else:
+            self._execute_many(query, params)
+
+    def _execute_many(self, query: str, params: Iterable[Mapping] = []):
         """Execute and commit multiple SQL queries, optionally bind the iterable of params first.
 
         Parameters
@@ -189,8 +252,13 @@ class Database:
 
         return row._asdict() if row else {}
 
-    def execute_fetch_many(self, query: str, params: Iterable[Mapping] = [], n: int = 1) -> list[dict]:
-        """Execute multiple SQL queries, optionally bind params, fetch first `n` results of last query.
+    def execute_fetch_many(
+        self,
+        query: str,
+        params: Iterable[Mapping] = [],
+        n: int = 1,
+    ) -> list[dict]:
+        """Execute SQL queries, optionally bind params, fetch first `n` results of last query.
 
         Parameters
         ----------
