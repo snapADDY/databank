@@ -95,7 +95,7 @@ For both `execute()` and `execute_many()` you can pass an `in_background` keywor
 <Thread(Thread-1, started 123456789012345)>
 ```
 
-Beware that if you are using `in_background=True`, you have to make sure that the connection pool size is large enough to handle the number of concurrent queries. Also note that this might lead to a range of issues like potential locking issues if not handled correctly, reduced performance or even deadlocks. You also might want to set an explicit timeout for queries by passing e.g. `{"options": "-c statement_timeout=60000"}` for PostgreSQL when initializing the `Database` object to kill all queries taking longer than 60 seconds.
+Beware that if you are using `in_background=True`, you have to make sure that the connection pool size is large enough to handle the number of concurrent queries. Also note that this might lead to a range of other issues like locking, reduced performance or even deadlocks. You also might want to set an explicit timeout for queries by passing e.g. `{"options": "-c statement_timeout=60000"}` for PostgreSQL when initializing the `Database` object to kill all queries taking longer than 60 seconds.
 
 
 ## Query Collection
