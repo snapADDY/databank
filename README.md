@@ -88,7 +88,7 @@ If you are using PostgreSQL with `jsonb` columns, you can use a helper function 
 
 ### Executing Queries in the Background
 
-For both `execute()` and `execute_many()` you can pass an `in_background` keyword argument (which is by default `False`). If set to `True`, the query will be executed in the background in another thread and the function will return immediately the `Thread` object (i.e. non-blocking). You can call `join()` on that object to wait for the query to finish or just do nothing and go on:
+For both `execute()` and `execute_many()` you can pass an `in_background` keyword argument (which is by default `False`). If set to `True`, the query will be executed in the background in another thread and the method will return immediately the `Thread` object (i.e. non-blocking). You can call `join()` on that object to wait for the query to finish or just do nothing and go on:
 
 ```python
 >>> db.execute("INSERT INTO beatles (id, member) VALUES (:id, :member);", {"id": 4, "member": "Klaus"}, in_background=True)
