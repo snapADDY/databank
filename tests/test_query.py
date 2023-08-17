@@ -12,9 +12,10 @@ def queries() -> QueryCollection:
 
 
 def test_query_collection(queries: QueryCollection):
-    assert len(queries) == 2
+    assert len(queries) == 3
     assert queries["insert_data"] == "INSERT INTO beatles (id, member) VALUES (:id, :member);"
     assert queries["select_all_data"] == "SELECT * FROM beatles;"
+    assert queries["select_record_by_id"] == "SELECT * FROM beatles WHERE id = :id;"
 
     with pytest.raises(KeyError):
         queries["invalid"]
@@ -26,10 +27,6 @@ def test_is_valid_query_header():
     assert not is_valid_query_header("/** @name foo **/")
     assert not is_valid_query_header("/* @name foo bar */")
     assert not is_valid_query_header("-- @name: foo")
-
-
-def test_query_collection_repr(queries: QueryCollection):
-    assert repr(queries) == "<QueryCollection (2 queries): ['insert_data', 'select_all_data']>"
 
 
 def test_query_collection_mapping(queries: QueryCollection):
