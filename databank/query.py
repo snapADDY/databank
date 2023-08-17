@@ -1,6 +1,7 @@
 import re
 from os import PathLike
 from pathlib import Path
+from collections.abc import Mapping
 
 # queries are separated by two newlines
 QUERY_SEPARATOR = "\n\n"
@@ -13,7 +14,7 @@ class InvalidQueryHeader(Exception):
     ...
 
 
-class QueryCollection:
+class QueryCollection(Mapping):
     def __init__(self, queries: dict[str, str]):
         """Collection of SQL queries.
 
@@ -23,6 +24,59 @@ class QueryCollection:
             Dictionary of query names and queries.
         """
         self._queries = queries
+
+    def __iter__(self):
+        """Iterate over the query names.
+
+        Yields
+        ------
+        str
+            Query name.
+        """
+        yield from self._queries
+
+    def __len__(self):
+        """Get the number of queries in this collection.
+
+        Returns
+        -------
+        int
+            Number of queries in this collection.
+        """
+        return len(self._queries)
+
+    def __getitem__(self, key: str) -> str:
+        """Get the query with the given name.
+
+        Parameters
+        ----------
+        key : str
+            Name of the query to get.
+
+        Raises
+        ------
+        KeyError
+            If the given key is not a valid query name.
+
+        Returns
+        -------
+        str
+            Query with the given name.
+        """
+        if key not in self._queries:
+            raise KeyError(f"'{key}' is not a valid query name")
+
+        return self._queries[key]
+
+    def __repr__(self) -> str:
+        """Get the string representation of this collection.
+
+        Returns
+        -------
+        str
+            String representation of this collection.
+        """
+        return f"<QueryCollection ({len(self)} queries): {list(self._queries)}>"
 
     @classmethod
     def from_file(cls, filepath: PathLike):
@@ -61,49 +115,6 @@ class QueryCollection:
             queries[header["name"]] = "\n".join(_lines[1:]).strip()
 
         return cls(queries)
-
-    def __repr__(self) -> str:
-        """Get the string representation of this collection.
-
-        Returns
-        -------
-        str
-            String representation of this collection.
-        """
-        return f"<QueryCollection ({len(self)} queries): {list(self._queries)}>"
-
-    def __len__(self) -> int:
-        """Get the number of queries in this collection.
-
-        Returns
-        -------
-        int
-            Number of queries in this collection.
-        """
-        return len(self._queries)
-
-    def __getitem__(self, key: str) -> str:
-        """Get the query with the given name.
-
-        Parameters
-        ----------
-        key : str
-            Name of the query to get.
-
-        Raises
-        ------
-        KeyError
-            If the given key is not a valid query name.
-
-        Returns
-        -------
-        str
-            Query with the given name.
-        """
-        if key not in self._queries:
-            raise KeyError(f"'{key}' is not a valid query name")
-
-        return self._queries[key]
 
 
 def is_valid_query_header(header: str) -> bool:
