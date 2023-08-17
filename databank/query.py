@@ -1,7 +1,7 @@
 import re
+from collections.abc import Mapping
 from os import PathLike
 from pathlib import Path
-from collections.abc import Mapping
 
 # queries are separated by two newlines
 QUERY_SEPARATOR = "\n\n"
@@ -107,7 +107,7 @@ class QueryCollection(Mapping):
 
         # parse queries
         queries = {}
-        for query in sql.split(QUERY_SEPARATOR):
+        for query in (q.strip() for q in sql.split(QUERY_SEPARATOR) if q.strip()):
             _lines = query.split("\n")
 
             # parse query header and body
