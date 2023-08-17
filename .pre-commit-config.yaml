@@ -1,0 +1,15 @@
+default_stages: [commit]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: end-of-file-fixer
+        stages: [commit]
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+        stages: [commit]
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.0.284'
+    hooks:
+      - id: ruff
