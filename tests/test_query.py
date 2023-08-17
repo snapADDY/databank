@@ -26,3 +26,13 @@ def test_is_valid_query_header():
     assert not is_valid_query_header("/** @name foo **/")
     assert not is_valid_query_header("/* @name foo bar */")
     assert not is_valid_query_header("-- @name: foo")
+
+
+def test_query_collection_repr(queries: QueryCollection):
+    assert repr(queries) == "<QueryCollection (2 queries): ['insert_data', 'select_all_data']>"
+
+
+def test_query_collection_mapping(queries: QueryCollection):
+    assert hasattr(queries, "items")
+    assert hasattr(queries, "keys")
+    assert hasattr(queries, "values")
