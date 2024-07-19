@@ -55,7 +55,7 @@ def serialize_param(param: Any) -> Value:
         Serialized parameter.
     """
     if isinstance(param, (str, int, float, bool, tuple, datetime, date)) or (
-        type(param).__name__ in ["Jsonb", "Json"]
+        type(param).__name__ in {"Jsonb", "Json"}
     ):
         return param
     elif isinstance(param, (dict, list)):
