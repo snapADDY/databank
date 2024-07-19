@@ -1,13 +1,15 @@
 import json
 from datetime import date, datetime
-from typing import Any, Mapping, Optional, Union
+from typing import Any, Literal, Mapping, Optional, Union
 
 from sqlalchemy import text
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.sql.elements import TextClause
 
 # supported types for a row value
-Value = Union[str, int, float, bool, tuple, datetime, date, None]
+Value = Union[
+    str, int, float, bool, tuple, datetime, date, Literal["Jsonb"], Literal["Json"], None
+]
 
 
 def serialize_params(params: dict[str, Any]) -> dict[str, Value]:
@@ -52,7 +54,9 @@ def serialize_param(param: Any) -> Value:
     Value
         Serialized parameter.
     """
-    if isinstance(param, (str, int, float, bool, tuple, datetime, date)):
+    if isinstance(param, (str, int, float, bool, tuple, datetime, date)) or (
+        type(param).__name__ in ["Jsonb", "Json"]
+    ):
         return param
     elif isinstance(param, (dict, list)):
         return json.dumps(param)
