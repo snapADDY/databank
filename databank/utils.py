@@ -6,6 +6,8 @@ from sqlalchemy import text
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.sql.elements import TextClause
 
+SUPPORTED_TYPES = (str, int, float, bool, tuple, datetime, date)
+
 # supported types for a row value
 Value = Union[
     str, int, float, bool, tuple, datetime, date, Literal["Jsonb"], Literal["Json"], None
@@ -54,9 +56,7 @@ def serialize_param(param: Any) -> Value:
     Value
         Serialized parameter.
     """
-    if isinstance(param, (str, int, float, bool, tuple, datetime, date)) or (
-        type(param).__name__ in {"Jsonb", "Json"}
-    ):
+    if isinstance(param, SUPPORTED_TYPES) or (type(param).__name__ in {"Jsonb", "Json"}):
         return param
     elif isinstance(param, (dict, list)):
         return json.dumps(param)
