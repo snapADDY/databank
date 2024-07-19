@@ -1,2 +1,2 @@
-from databank.core import Database
-from databank.query import QueryCollection
+from databank.core import Database as Database
+from databank.query import QueryCollection as QueryCollection
