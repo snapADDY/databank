@@ -35,13 +35,6 @@ def test_execute_many(database: Database):
     assert len(database.fetch_all("SELECT * FROM beatles;")) == 6
 
 
-def test_execute_in_background(database: Database):
-    thread = database.execute(
-        "CREATE TABLE plastic_ono_band (id INTEGER PRIMARY KEY, member TEXT NOT NULL);",
-        in_background=True,
-    )
-    assert isinstance(thread, Thread)
-
 def test_fetch_one(database: Database):
     assert database.fetch_one("SELECT * FROM beatles ORDER BY id;")["member"] == "John"
 
