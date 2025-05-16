@@ -17,10 +17,10 @@ You can install the latest stable version from [PyPI](https://pypi.org/project/d
 $ pip install databank
 ```
 
-**Adapters not included.** Install e.g. `psycopg2` for PostgreSQL:
+**Adapters not included.** Install e.g. `psycopg` for PostgreSQL:
 
 ```
-$ pip install psycopg2
+$ pip install psycopg
 ```
 
 ## Usage
@@ -29,7 +29,7 @@ Connect to the database of your choice:
 
 ```python
 >>> from databank import Database
->>> db = Database("postgresql://user:password@localhost/db", pool_size=2)
+>>> db = Database("postgresql+psycopg://user:password@localhost/db", pool_size=2)
 ```
 
 The keyword arguments are passed directly to SQLAlchemy's `create_engine()` function. Depending on the database you connect to, you have options like the size of connection pools.
@@ -86,17 +86,16 @@ If you are using PostgreSQL with `jsonb` columns, you can use a helper function 
 {'member': 'Ringo', 'song': '["Don\'t Pass Me By", "Octopus\'s Garden"]'}
 ```
 
-### Executing Queries in the Background
+### Async
 
-For both `execute()` and `execute_many()` you can pass an `in_background` keyword argument (which is by default `False`). If set to `True`, the query will be executed in the background in another thread and the method will return immediately the `Thread` object (i.e. non-blocking). You can call `join()` on that object to wait for the query to finish or just do nothing and go on:
+You can also use `AsyncDatabase` which implements basically the same methods as `Database` (but with [an `a` prefix](https://peps.python.org/pep-0492/#why-magic-methods-start-with-a)):
 
 ```python
->>> db.execute("INSERT INTO beatles (id, member) VALUES (:id, :member);", {"id": 4, "member": "Klaus"}, in_background=True)
-<Thread(Thread-1 (_execute), started 140067398776512)>
+>>> from databank import AsyncDatabase
+>>> db = AsyncDatabase("postgresql+psycopg://user:password@localhost/db", pool_size=2)
+>>> await db.afetch_one("SELECT * FROM beatles;")
+{'id': 0, 'member': 'John'}
 ```
-
-Beware that if you are using `in_background=True`, you have to make sure that the connection pool size is large enough to handle the number of concurrent queries and that your program is running long enough if you are not explicitly waiting for the thread to finish. Also note that this might lead to a range of other issues like locking, reduced performance or even deadlocks. You also might want to set an explicit timeout for queries by passing e.g. `{"options": "-c statement_timeout=60000"}` for PostgreSQL when initializing the `Database` object to kill all queries taking longer than 60 seconds.
-
 
 ## Query Collection
 
