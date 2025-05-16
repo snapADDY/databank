@@ -1,9 +1,9 @@
 from pathlib import Path
-from threading import Thread
 
 import pytest
+import pytest_asyncio
 
-from databank import Database, QueryCollection
+from databank import AsyncDatabase, Database, QueryCollection
 
 
 @pytest.fixture
@@ -14,6 +14,17 @@ def database():
 
     params = [{"member": "John"}, {"member": "Paul"}, {"member": "George"}, {"member": "Ringo"}]
     db.execute_many("INSERT INTO beatles (member) VALUES (:member);", params=params)
+    yield db
+
+
+@pytest_asyncio.fixture
+async def async_database():
+    db = AsyncDatabase("sqlite+aiosqlite://")
+
+    await db.aexecute("CREATE TABLE beatles (id INTEGER PRIMARY KEY, member TEXT NOT NULL);")
+
+    params = [{"member": "John"}, {"member": "Paul"}, {"member": "George"}, {"member": "Ringo"}]
+    await db.aexecute_many("INSERT INTO beatles (member) VALUES (:member);", params=params)
     yield db
 
 
@@ -49,3 +60,47 @@ def test_fetch_all(database: Database):
 
 def test_fetch_all_from_query_collection(database: Database, queries: QueryCollection):
     assert len(database.fetch_all(queries["select_all_data"])) == 4
+
+
+@pytest.mark.asyncio
+async def test_aexecute(async_database: AsyncDatabase):
+    params = {"member": "Klaus"}
+    await async_database.aexecute("INSERT INTO beatles (member) VALUES (:member);", params=params)
+    result = await async_database.afetch_all("SELECT * FROM beatles;")
+    assert len(result) == 5
+
+
+@pytest.mark.asyncio
+async def test_aexecute_many(async_database: AsyncDatabase):
+    params = [{"member": "Klaus"}, {"member": "Yoko"}]
+    await async_database.aexecute_many(
+        "INSERT INTO beatles (member) VALUES (:member);", params=params
+    )
+    result = await async_database.afetch_all("SELECT * FROM beatles;")
+    assert len(result) == 6
+
+
+@pytest.mark.asyncio
+async def test_afetch_one(async_database: AsyncDatabase):
+    result = await async_database.afetch_one("SELECT * FROM beatles ORDER BY id;")
+    assert result["member"] == "John"
+
+
+@pytest.mark.asyncio
+async def test_afetch_many(async_database: AsyncDatabase):
+    results = await async_database.afetch_many("SELECT * FROM beatles;", n=2)
+    assert len(results) == 2
+
+
+@pytest.mark.asyncio
+async def test_afetch_all(async_database: AsyncDatabase):
+    results = await async_database.afetch_all("SELECT * FROM beatles;")
+    assert len(results) == 4
+
+
+@pytest.mark.asyncio
+async def test_afetch_all_from_query_collection(
+    async_database: AsyncDatabase,
+    queries: QueryCollection,
+):
+    assert len(await async_database.afetch_all(queries["select_all_data"])) == 4
