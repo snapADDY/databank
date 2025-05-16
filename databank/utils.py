@@ -1,17 +1,19 @@
 import json
 from datetime import date, datetime
-from typing import Any, Literal, Mapping, Optional, Union
+from typing import Any, Mapping, Optional
 
 from sqlalchemy import text
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.sql.elements import TextClause
 
-SUPPORTED_TYPES = (str, int, float, bool, tuple, datetime, date)
+try:
+    from psycopg.types.json import Json, Jsonb
 
-# supported types for a row value
-Value = Union[
-    str, int, float, bool, tuple, datetime, date, Literal["Jsonb"], Literal["Json"], None
-]
+    SUPPORTED_TYPES = (str, int, float, bool, tuple, datetime, date, Jsonb, Json)
+    Value = str | int | float | bool | tuple | datetime | date | Jsonb | Json
+except ModuleNotFoundError:
+    SUPPORTED_TYPES = (str, int, float, bool, tuple, datetime, date)
+    Value = str | int | float | bool | tuple | datetime | date
 
 
 def serialize_params(params: dict[str, Any]) -> dict[str, Value]:
@@ -56,7 +58,7 @@ def serialize_param(param: Any) -> Value:
     Value
         Serialized parameter.
     """
-    if isinstance(param, SUPPORTED_TYPES) or (type(param).__name__ in {"Jsonb", "Json"}):
+    if isinstance(param, SUPPORTED_TYPES):
         return param
     elif isinstance(param, (dict, list)):
         return json.dumps(param)
