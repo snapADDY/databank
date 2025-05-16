@@ -1,6 +1,6 @@
 [project]
 name = "databank"
-version = "1.0.0a3"
+version = "1.0.0a4"
 description = "Databank is an easy-to-use Python library for making raw SQL queries in a multi-threaded environment."
 authors = [{ name = "snapADDY GmbH", email = "info@snapaddy.com" }]
 requires-python = "~=3.10"
@@ -11,7 +11,14 @@ dependencies = ["sqlalchemy>=2.0.4"]
 asyncio = ["greenlet>=1"]
 
 [dependency-groups]
-dev = ["pytest>=7.2.1", "pre-commit>=3.3.3", "ruff>=0.5.3"]
+dev = [
+    "pytest>=7.2.1",
+    "pre-commit>=3.3.3",
+    "ruff>=0.5.3",
+    "aiosqlite>=0.21.0",
+    "pytest-asyncio>=0.26.0",
+    "psycopg>=3.2.9",
+]
 
 [build-system]
 requires = ["hatchling"]
