@@ -1,11 +1,15 @@
-from typing import Iterable, Mapping
+from contextlib import asynccontextmanager, contextmanager
+from typing import AsyncGenerator, Generator, Iterable, Mapping
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Engine, ResultProxy
-from sqlalchemy.engine.row import RowProxy
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.sql.elements import TextClause
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, async_sessionmaker
+from sqlalchemy.orm.session import Session
 
 
 class Database:
@@ -16,244 +20,100 @@ class Database:
         ----------
         url : str
             URL of the database to connect to.
+        pool_size : int
+            The size of the connection pool to use, by default 5.
+        max_overflow : int
+            The maximum number of connections to allow in the pool, by default 10.
+        pool_timeout : int
+            The number of seconds to wait before giving up on getting a connection from the pool, by default 30.
+        pool_recycle : int
+            The number of seconds to recycle a connection, by default 3600.
         """
-        self.engine: Engine = create_engine(url, **kwargs)
-        self.session: scoped_session = scoped_session(sessionmaker(bind=self.engine))
+        self._engine = create_engine(url, **kwargs)
+        self._session = scoped_session(sessionmaker(bind=self._engine, expire_on_commit=False))
 
-    def execute(self, query: str, *, params: Mapping = {}):
-        """Execute and commit the given SQL query, optionally bind the params first.
+    @contextmanager
+    def create_session(self) -> Generator[Session, None, None]:
+        """Create a new session for the current thread."""
+        session = self._session()
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            self._session.remove()
+
+    def execute(self, query: str, *, params: Mapping | None = None):
+        """Execute the given SQL query with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Mapping
+        params : Mapping | None
             Parameters to bind to the query.
         """
-        # create thread-local session
-        self.session()
+        with self.create_session() as session:
+            session.execute(text(query), params=params)
 
-        # bind params to sql query
-        sql: TextClause = text(query).bindparams(**params)
-
-        try:
-            self.session.execute(sql)
-        except Exception:
-            self.session.rollback()
-            self.session.remove()
-            raise
-        else:
-            self.session.commit()
-            self.session.remove()
-
-    def execute_many(self, query: str, *, params: Iterable[Mapping] = []):
-        """Execute and commit multiple SQL queries, optionally bind the iterable of params first.
+    def execute_many(self, query: str, *, params: Iterable[Mapping] | None = None):
+        """Execute the given SQL query multiple times with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Iterable[Mapping]
+        params : Iterable[Mapping] | None
             Iterable of params to bind to the query.
         """
-        # create thread-local session
-        self.session()
+        with self.create_session() as session:
+            session.execute(text(query), params=params)
 
-        # construct executable text clause
-        sql: TextClause = text(query)
-
-        try:
-            self.session.execute(sql, params=params)
-        except Exception:
-            self.session.rollback()
-            self.session.remove()
-            raise
-        else:
-            self.session.commit()
-            self.session.remove()
-
-    def fetch_one(self, query: str, *, params: Mapping = {}) -> dict:
-        """Execute the given SQL query, optionally bind the params, and fetch the first result.
+    def fetch_one(self, query: str, *, params: Mapping | None = None) -> dict:
+        """Fetch the first result of the given SQL query with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Mapping
+        params : Mapping | None
             Parameters to bind to the query.
         """
-        # create thread-local session
-        self.session()
+        with self.create_session() as session:
+            result = session.execute(text(query), params=params).fetchone()
+            return result._asdict() if result else {}
 
-        # bind params to sql query
-        sql: TextClause = text(query).bindparams(**params)
-
-        try:
-            result: ResultProxy = self.session.execute(sql)
-            row: RowProxy = result.fetchone()
-        except Exception:
-            self.session.rollback()
-            self.session.remove()
-            raise
-        else:
-            self.session.commit()
-            self.session.remove()
-
-        return row._asdict() if row else {}
-
-    def fetch_many(self, query: str, *, params: Mapping = {}, n: int = 1) -> list[dict]:
-        """Execute the given SQL query, optionally bind params, and fetch the first `n` results.
+    def fetch_many(self, query: str, *, params: Mapping | None = None, n: int = 1) -> list[dict]:
+        """Fetch the first `n` results of the given SQL query with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Mapping
+        params : Mapping | None
             Parameters to bind to the query.
         n : int
             Number of rows to fetch, by default 1.
         """
-        # create thread-local session
-        self.session()
+        with self.create_session() as session:
+            results = session.execute(text(query), params=params).fetchmany(n)
+            return [result._asdict() for result in results if result]
 
-        # bind params to sql query
-        sql = text(query).bindparams(**params)
-
-        try:
-            proxy: ResultProxy = self.session.execute(sql)
-            result = proxy.fetchmany(n)
-        except Exception:
-            self.session.rollback()
-            self.session.remove()
-            raise
-        else:
-            self.session.commit()
-            self.session.remove()
-
-        return [row._asdict() for row in result if row]
-
-    def fetch_all(self, query: str, *, params: Mapping = {}) -> list[dict]:
-        """Execute the given SQL query, optionally bind the params, and fetch all results.
+    def fetch_all(self, query: str, *, params: Mapping | None = None) -> list[dict]:
+        """Fetch all results of the given SQL query with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Mapping
+        params : Mapping | None
             Parameters to bind to the query.
         """
-        # create thread-local session
-        self.session()
-
-        # bind params to sql query
-        sql = text(query).bindparams(**params)
-
-        try:
-            proxy: ResultProxy = self.session.execute(sql)
-            result = proxy.fetchall()
-        except Exception:
-            self.session.rollback()
-            self.session.remove()
-            raise
-        else:
-            self.session.commit()
-            self.session.remove()
-
-        return [row._asdict() for row in result if row]
-
-    def execute_fetch_one(self, query: str, *, params: Iterable[Mapping] = []) -> dict:
-        """Execute multiple SQL queries, optionally bind params, fetch first result of last query.
-
-        Parameters
-        ----------
-        query : str
-            SQL query to execute.
-        params : Iterable[Mapping]
-            Iterable of params to bind to the query.
-        """
-        # create thread-local session
-        self.session()
-
-        # construct executable text clause
-        sql: TextClause = text(query)
-
-        try:
-            proxy: ResultProxy = self.session.execute(sql, params=params)
-            row: RowProxy = proxy.fetchone()
-        except Exception:
-            self.session.rollback()
-            self.session.remove()
-            raise
-        else:
-            self.session.commit()
-            self.session.remove()
-
-        return row._asdict() if row else {}
-
-    def execute_fetch_many(
-        self,
-        query: str,
-        params: Iterable[Mapping] = [],
-        n: int = 1,
-    ) -> list[dict]:
-        """Execute SQL queries, optionally bind params, fetch first `n` results of last query.
-
-        Parameters
-        ----------
-        query : str
-            SQL query to execute.
-        params : Iterable[Mapping]
-            Iterable of params to bind to the query.
-        n : int
-            Number of rows to fetch, by default 1.
-        """
-        # create thread-local session
-        self.session()
-
-        # construct executable text clause
-        sql: TextClause = text(query)
-
-        try:
-            proxy: ResultProxy = self.session.execute(sql, params=params)
-            result = proxy.fetchmany(n)
-        except Exception:
-            self.session.rollback()
-            self.session.remove()
-            raise
-        else:
-            self.session.commit()
-            self.session.remove()
-
-        return [row._asdict() for row in result if row]
-
-    def execute_fetch_all(self, query: str, *, params: Iterable[Mapping] = []) -> list[dict]:
-        """Execute multiple SQL queries, optionally bind params, fetch all results of last query.
-
-        Parameters
-        ----------
-        query : str
-            SQL query to execute.
-        params : Iterable[Mapping]
-            Iterable of params to bind to the query.
-        """
-        # create thread-local session
-        self.session()
-
-        # construct executable text clause
-        sql: TextClause = text(query)
-
-        try:
-            proxy: ResultProxy = self.session.execute(sql, params=params)
-            result = proxy.fetchall()
-        except Exception:
-            self.session.rollback()
-            self.session.remove()
-            raise
-        else:
-            self.session.commit()
-            self.session.remove()
-
-        return [row._asdict() for row in result if row]
+        with self.create_session() as session:
+            results = session.execute(text(query), params=params).fetchall()
+            return [result._asdict() for result in results if result]
 
 
 class AsyncDatabase:
@@ -264,197 +124,102 @@ class AsyncDatabase:
         ----------
         url : str
             URL of the database to connect to.
+        pool_size : int
+            The size of the connection pool to use, by default 5.
+        max_overflow : int
+            The maximum number of connections to allow in the pool, by default 10.
+        pool_timeout : int
+            The number of seconds to wait before giving up on getting a connection from the pool, by default 30.
+        pool_recycle : int
+            The number of seconds to recycle a connection, by default 3600.
         """
-        self.engine: AsyncEngine = create_async_engine(url, **kwargs)
-        self.session = async_sessionmaker(bind=self.engine, expire_on_commit=False)
+        self._engine: AsyncEngine = create_async_engine(url, **kwargs)
+        self._session = async_sessionmaker(bind=self._engine, expire_on_commit=False)
 
-    async def aexecute(self, query: str, *, params: Mapping = {}):
-        """Execute and commit the given SQL query, optionally bind the params first.
+    @asynccontextmanager
+    async def acreate_session(self) -> AsyncGenerator[AsyncSession, None]:
+        """Create a new session for the current thread."""
+        session = self._session()
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+    async def aexecute(self, query: str, *, params: Mapping | None = None):
+        """Execute the given SQL query with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Mapping
+        params : Mapping | None
             Parameters to bind to the query.
         """
-        # bind params to sql query
-        sql: TextClause = text(query).bindparams(**params)
+        async with self.acreate_session() as session:
+            await session.execute(text(query), params=params)
 
-        async with self.session() as session:
-            try:
-                await session.execute(sql)
-                await session.commit()
-            except Exception:
-                await session.rollback()
-                raise
-
-    async def aexecute_many(self, query: str, *, params: Iterable[Mapping] = []):
-        """Execute and commit multiple SQL queries, optionally bind the iterable of params first.
+    async def aexecute_many(self, query: str, *, params: Iterable[Mapping] | None = None):
+        """Execute the given SQL query multiple times with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Iterable[Mapping]
+        params : Iterable[Mapping] | None
             Iterable of params to bind to the query.
         """
-        # construct executable text clause
-        sql: TextClause = text(query)
+        async with self.acreate_session() as session:
+            await session.execute(text(query), params=params)
 
-        async with self.session() as session:
-            try:
-                await session.execute(sql, params=params)
-                await session.commit()
-            except Exception:
-                await session.rollback()
-                raise
-
-    async def afetch_one(self, query: str, *, params: Mapping = {}) -> dict:
-        """Execute the given SQL query, optionally bind the params, and fetch the first result.
+    async def afetch_one(self, query: str, *, params: Mapping | None = None) -> dict:
+        """Fetch the first result of the given SQL query with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Mapping
+        params : Mapping | None
             Parameters to bind to the query.
         """
-        # bind params to sql query
-        sql: TextClause = text(query).bindparams(**params)
+        async with self.acreate_session() as session:
+            result = await session.execute(text(query), params=params)
+            row = result.fetchone()
+            return row._asdict() if row else {}
 
-        async with self.session() as session:
-            try:
-                result = await session.execute(sql)
-                row = result.fetchone()
-                await session.commit()
-                return row._asdict() if row else {}
-            except Exception:
-                await session.rollback()
-                raise
-
-    async def afetch_many(self, query: str, *, params: Mapping = {}, n: int = 1) -> list[dict]:
-        """Execute the given SQL query, optionally bind params, and fetch the first `n` results.
+    async def afetch_many(
+        self, query: str, *, params: Mapping | None = None, n: int = 1
+    ) -> list[dict]:
+        """Fetch the first `n` results of the given SQL query with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Mapping
+        params : Mapping | None
             Parameters to bind to the query.
         n : int
             Number of rows to fetch, by default 1.
         """
-        # bind params to sql query
-        sql = text(query).bindparams(**params)
+        async with self.acreate_session() as session:
+            result = await session.execute(text(query), params=params)
+            rows = result.fetchmany(n)
+            return [row._asdict() for row in rows if row]
 
-        async with self.session() as session:
-            try:
-                proxy = await session.execute(sql)
-                result = proxy.fetchmany(n)
-                await session.commit()
-                return [row._asdict() for row in result if row]
-            except Exception:
-                await session.rollback()
-                raise
-
-    async def afetch_all(self, query: str, *, params: Mapping = {}) -> list[dict]:
-        """Execute the given SQL query, optionally bind the params, and fetch all results.
+    async def afetch_all(self, query: str, *, params: Mapping | None = None) -> list[dict]:
+        """Fetch all results of the given SQL query with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Mapping
+        params : Mapping | None
             Parameters to bind to the query.
         """
-        # bind params to sql query
-        sql = text(query).bindparams(**params)
-
-        async with self.session() as session:
-            try:
-                proxy = await session.execute(sql)
-                result = proxy.fetchall()
-                await session.commit()
-                return [row._asdict() for row in result if row]
-            except Exception:
-                await session.rollback()
-                raise
-
-    async def execute_fetch_one(self, query: str, *, params: Iterable[Mapping] = []) -> dict:
-        """Execute multiple SQL queries, optionally bind params, fetch first result of last query.
-
-        Parameters
-        ----------
-        query : str
-            SQL query to execute.
-        params : Iterable[Mapping]
-            Iterable of params to bind to the query.
-        """
-        # construct executable text clause
-        sql: TextClause = text(query)
-
-        async with self.session() as session:
-            try:
-                proxy = await session.execute(sql, params=params)
-                row = proxy.fetchone()
-                await session.commit()
-                return row._asdict() if row else {}
-            except Exception:
-                await session.rollback()
-                raise
-
-    async def aexecute_fetch_many(
-        self,
-        query: str,
-        params: Iterable[Mapping] = [],
-        n: int = 1,
-    ) -> list[dict]:
-        """Execute SQL queries, optionally bind params, fetch first `n` results of last query.
-
-        Parameters
-        ----------
-        query : str
-            SQL query to execute.
-        params : Iterable[Mapping]
-            Iterable of params to bind to the query.
-        n : int
-            Number of rows to fetch, by default 1.
-        """
-        # construct executable text clause
-        sql: TextClause = text(query)
-
-        async with self.session() as session:
-            try:
-                proxy = await session.execute(sql, params=params)
-                result = proxy.fetchmany(n)
-                await session.commit()
-                return [row._asdict() for row in result if row]
-            except Exception:
-                await session.rollback()
-                raise
-
-    async def aexecute_fetch_all(
-        self, query: str, *, params: Iterable[Mapping] = []
-    ) -> list[dict]:
-        """Execute multiple SQL queries, optionally bind params, fetch all results of last query.
-
-        Parameters
-        ----------
-        query : str
-            SQL query to execute.
-        params : Iterable[Mapping]
-            Iterable of params to bind to the query.
-        """
-        # construct executable text clause
-        sql: TextClause = text(query)
-
-        async with self.session() as session:
-            try:
-                proxy = await session.execute(sql, params=params)
-                result = proxy.fetchall()
-                await session.commit()
-                return [row._asdict() for row in result if row]
-            except Exception:
-                await session.rollback()
-                raise
+        async with self.acreate_session() as session:
+            result = await session.execute(text(query), params=params)
+            rows = result.fetchall()
+            return [row._asdict() for row in rows if row]
