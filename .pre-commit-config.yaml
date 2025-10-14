@@ -9,7 +9,11 @@ repos:
       - id: trailing-whitespace
         stages: [pre-commit]
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.14.0'
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.0
     hooks:
-      - id: ruff
+      - id: ruff-check
+        types_or: [python, pyi, jupyter]
+        args: [--fix]
+      - id: ruff-format
+        types_or: [python, pyi, jupyter]
