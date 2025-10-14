@@ -33,7 +33,7 @@ class Database:
         self._session = scoped_session(sessionmaker(bind=self._engine, expire_on_commit=False))
 
     @contextmanager
-    def create_session(self) -> Generator[Session, None, None]:
+    def create_session(self) -> Generator[Session]:
         """Create a new session for the current thread."""
         session = self._session()
         try:
@@ -137,7 +137,7 @@ class AsyncDatabase:
         self._session = async_sessionmaker(bind=self._engine, expire_on_commit=False)
 
     @asynccontextmanager
-    async def acreate_session(self) -> AsyncGenerator[AsyncSession, None]:
+    async def acreate_session(self) -> AsyncGenerator[AsyncSession]:
         """Create a new session for the current thread."""
         session = self._session()
         try:
@@ -191,7 +191,7 @@ class AsyncDatabase:
             return row._asdict() if row else {}
 
     async def afetch_many(
-        self, query: str, *, params: Mapping | None = None, n: int = 1
+        self, query: str, *, params: Mapping | None = None, n: int = 1,
     ) -> list[dict]:
         """Fetch the first `n` results of the given SQL query with optional parameters.
 
