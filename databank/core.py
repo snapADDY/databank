@@ -1,5 +1,5 @@
+from collections.abc import AsyncGenerator, Generator, Iterable, Mapping
 from contextlib import asynccontextmanager, contextmanager
-from typing import AsyncGenerator, Generator, Iterable, Mapping
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import (
@@ -13,6 +13,8 @@ from sqlalchemy.orm.session import Session
 
 
 class Database:
+    """Synchronous database connection."""
+
     def __init__(self, url: str, **kwargs):
         """Connect to the given database.
 
@@ -25,12 +27,17 @@ class Database:
         max_overflow : int
             The maximum number of connections to allow in the pool, by default 10.
         pool_timeout : int
-            The number of seconds to wait before giving up on getting a connection from the pool, by default 30.
+            The number of seconds to wait before giving up on getting a connection from the pool,
+            by default 30.
         pool_recycle : int
             The number of seconds to recycle a connection, by default 3600.
         """
         self._engine = create_engine(url, **kwargs)
         self._session = scoped_session(sessionmaker(bind=self._engine, expire_on_commit=False))
+
+    def close(self):
+        """Close the database connection."""
+        self._engine.dispose()
 
     @contextmanager
     def create_session(self) -> Generator[Session]:
@@ -117,6 +124,8 @@ class Database:
 
 
 class AsyncDatabase:
+    """Asynchronous database connection."""
+
     def __init__(self, url: str, **kwargs):
         """Connect to the given database.
 
@@ -129,16 +138,21 @@ class AsyncDatabase:
         max_overflow : int
             The maximum number of connections to allow in the pool, by default 10.
         pool_timeout : int
-            The number of seconds to wait before giving up on getting a connection from the pool, by default 30.
+            The number of seconds to wait before giving up on getting a connection from the pool,
+            by default 30.
         pool_recycle : int
             The number of seconds to recycle a connection, by default 3600.
         """
         self._engine: AsyncEngine = create_async_engine(url, **kwargs)
         self._session = async_sessionmaker(bind=self._engine, expire_on_commit=False)
 
+    async def aclose(self):
+        """Close the database connection."""
+        await self._engine.dispose()
+
     @asynccontextmanager
     async def acreate_session(self) -> AsyncGenerator[AsyncSession]:
-        """Create a new session for the current thread."""
+        """Create a new session."""
         session = self._session()
         try:
             yield session
@@ -191,7 +205,11 @@ class AsyncDatabase:
             return row._asdict() if row else {}
 
     async def afetch_many(
-        self, query: str, *, params: Mapping | None = None, n: int = 1,
+        self,
+        query: str,
+        *,
+        params: Mapping | None = None,
+        n: int = 1,
     ) -> list[dict]:
         """Fetch the first `n` results of the given SQL query with optional parameters.
 

@@ -10,13 +10,15 @@ QUERY_SEPARATOR = "\n\n"
 _HEADER_PATTERN = re.compile(r"/\*\s@name\s\w+\s\*/")
 
 
-class InvalidQueryHeader(Exception):
-    ...
+class InvalidQueryHeaderError(Exception):
+    """Exception raised when a query header is invalid."""
 
 
 class QueryCollection(Mapping):
+    """Collection of SQL queries."""
+
     def __init__(self, queries: dict[str, str]):
-        """Collection of SQL queries.
+        """Initialize a collection of SQL queries.
 
         Parameters
         ----------
@@ -143,7 +145,7 @@ def parse_header(header: str) -> dict[str, str]:
 
     Raises
     ------
-    InvalidQueryHeader
+    InvalidQueryHeaderError
         If the given header is not a valid query header.
 
     Returns
@@ -152,6 +154,6 @@ def parse_header(header: str) -> dict[str, str]:
         Dictionary of header name and value.
     """
     if not is_valid_query_header(header):
-        raise InvalidQueryHeader(f"'{header}' is not a valid query header")
+        raise InvalidQueryHeaderError(f"'{header}' is not a valid query header")
 
     return {"name": header.removeprefix("/* @name ").removesuffix(" */")}

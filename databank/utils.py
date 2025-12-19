@@ -1,6 +1,7 @@
 import json
+from collections.abc import Mapping
 from datetime import date, datetime
-from typing import Any, Mapping, Optional
+from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.engine.interfaces import Dialect
@@ -60,15 +61,17 @@ def serialize_param(param: Any) -> Value:
     """
     if isinstance(param, SUPPORTED_TYPES):
         return param
-    elif isinstance(param, (dict, list)):
+
+    if isinstance(param, (dict, list)):
         return json.dumps(param)
-    elif param is None:
+
+    if param is None:
         return None
-    else:
-        raise ValueError(f"{type(param)} is not serializable")
+
+    raise ValueError(f"{type(param)} is not serializable")
 
 
-def compile_sql(query: str, params: Mapping = {}, dialect: Optional[Dialect] = None) -> str:
+def compile_sql(query: str, params: Mapping = {}, dialect: Dialect | None = None) -> str:
     """Compile the given query and bind the parameters to get the actual SQL query.
 
     Parameters
