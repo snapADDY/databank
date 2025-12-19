@@ -15,6 +15,7 @@ def database():
     params = [{"member": "John"}, {"member": "Paul"}, {"member": "George"}, {"member": "Ringo"}]
     db.execute_many("INSERT INTO beatles (member) VALUES (:member);", params=params)
     yield db
+    db.close()
 
 
 @pytest_asyncio.fixture
@@ -26,6 +27,7 @@ async def async_database():
     params = [{"member": "John"}, {"member": "Paul"}, {"member": "George"}, {"member": "Ringo"}]
     await db.aexecute_many("INSERT INTO beatles (member) VALUES (:member);", params=params)
     yield db
+    await db.aclose()
 
 
 @pytest.fixture
