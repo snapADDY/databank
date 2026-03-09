@@ -1,4 +1,4 @@
-from collections.abc import AsyncGenerator, Generator, Iterable, Mapping
+from collections.abc import AsyncGenerator, Generator, Mapping
 from contextlib import asynccontextmanager, contextmanager
 
 from sqlalchemy import create_engine, text
@@ -13,7 +13,7 @@ from sqlalchemy.orm.session import Session
 
 
 class Database:
-    """Synchronous database connection."""
+    """Database connection for synchronous operations."""
 
     def __init__(self, url: str, **kwargs):
         """Connect to the given database.
@@ -65,15 +65,15 @@ class Database:
         with self.create_session() as session:
             session.execute(text(query), params=params)
 
-    def execute_many(self, query: str, *, params: Iterable[Mapping] | None = None):
+    def execute_many(self, query: str, *, params: list[Mapping] | None = None):
         """Execute the given SQL query multiple times with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Iterable[Mapping] | None
-            Iterable of params to bind to the query.
+        params : list[Mapping] | None
+            List of params to bind to the query.
         """
         with self.create_session() as session:
             session.execute(text(query), params=params)
@@ -124,7 +124,7 @@ class Database:
 
 
 class AsyncDatabase:
-    """Asynchronous database connection."""
+    """Database connection for asynchronous operations."""
 
     def __init__(self, url: str, **kwargs):
         """Connect to the given database.
@@ -176,15 +176,15 @@ class AsyncDatabase:
         async with self.acreate_session() as session:
             await session.execute(text(query), params=params)
 
-    async def aexecute_many(self, query: str, *, params: Iterable[Mapping] | None = None):
+    async def aexecute_many(self, query: str, *, params: list[Mapping] | None = None):
         """Execute the given SQL query multiple times with optional parameters.
 
         Parameters
         ----------
         query : str
             SQL query to execute.
-        params : Iterable[Mapping] | None
-            Iterable of params to bind to the query.
+        params : list[Mapping] | None
+            List of params to bind to the query.
         """
         async with self.acreate_session() as session:
             await session.execute(text(query), params=params)
