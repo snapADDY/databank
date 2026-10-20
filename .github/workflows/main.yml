@@ -1,4 +1,4 @@
-name: "Build"
+name: Test, build and publish wheels
 
 on:
   push:
@@ -9,19 +9,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
 
-      - name: Set up Python
-        run: uv python install
-
-      - name: Install the project
-        run: uv sync --locked --all-extras --dev
-
-      - name: Run tests
-        run: uv run pytest tests
+      - name: Run unit tests
+        run: uv run --group test --all-extras pytest tests
 
       - name: Build wheels
         run: uv build

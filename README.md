@@ -23,6 +23,12 @@ $ pip install databank
 $ pip install psycopg
 ```
 
+For `AsyncDatabase`, install the `asyncio` extra (and an async adapter):
+
+```
+$ pip install "databank[asyncio]"
+```
+
 ## Usage
 
 Connect to the database of your choice:
@@ -51,7 +57,7 @@ You can insert multiple rows at once:
 ...     {"id": 2, "member": "George"},
 ...     {"id": 3, "member": "Ringo"}
 ... ]
->>> db.execute_many("INSERT INTO beatles (id, member) VALUES (:id, :member);", params)
+>>> db.execute_many("INSERT INTO beatles (id, member) VALUES (:id, :member);", params=params)
 ```
 
 Fetch a single row:
@@ -86,6 +92,14 @@ If you are using PostgreSQL with `jsonb` columns, you can use a helper function 
 {'member': 'Ringo', 'song': '["Don\'t Pass Me By", "Octopus\'s Garden"]'}
 ```
 
+To log a query with its parameters, `compile_sql()` renders them as literals. Use it for logging and debugging only, never to execute the result:
+
+```python
+>>> from databank.utils import compile_sql
+>>> compile_sql("SELECT * FROM beatles WHERE id = :id;", params={"id": 0})
+'SELECT * FROM beatles WHERE id = 0;'
+```
+
 ### Async
 
 You can also use `AsyncDatabase` which implements basically the same methods as `Database` (but with [an `a` prefix](https://peps.python.org/pep-0492/#why-magic-methods-start-with-a)):
@@ -96,6 +110,8 @@ You can also use `AsyncDatabase` which implements basically the same methods as 
 >>> await db.afetch_one("SELECT * FROM beatles;")
 {'id': 0, 'member': 'John'}
 ```
+
+`acreate_session()` works like `create_session()`. Nested calls within the same task join the outer transaction, while other tasks (e.g. spawned with `asyncio.gather`) get their own session.
 
 ## Query Collection
 
@@ -111,7 +127,7 @@ SELECT * FROM beatles;
 
 > This idea is borrowed from [PgTyped](https://pgtyped.dev/docs/sql-file)
 
-A query _must_ have a header comment with the name of the query. If a query name is not unique, the last query with the same name will be used. You can parse that file and load the queries into a `QueryCollection`:
+A query _must_ start with a header comment with the name of the query and ends at the next header, so blank lines and comments inside a query are fine. Only comments are allowed before the first header. Query names must be unique, otherwise an `InvalidQueryError` is raised. You can parse that file and load the queries into a `QueryCollection`:
 
 ```python
 >>> from databank import QueryCollection
