@@ -1,23 +1,23 @@
 [project]
 name = "databank"
-version = "1.2.0"
+version = "1.2.1"
 description = "Databank is an easy-to-use Python library for making raw SQL queries in a multi-threaded environment."
 authors = [{ name = "snapADDY GmbH", email = "info@snapaddy.com" }]
 requires-python = ">=3.11"
 readme = "README.md"
-dependencies = ["sqlalchemy>=2.0.4"]
+dependencies = ["sqlalchemy>=2.1.0"]
 
 [project.optional-dependencies]
-asyncio = ["greenlet>=1"]
+asyncio = ["sqlalchemy[asyncio]>=2.1.0"]
 
 [dependency-groups]
 dev = [
-    "pytest>=7.2.1",
-    "pre-commit>=3.3.3",
-    "ruff>=0.5.3",
-    "aiosqlite>=0.21.0",
-    "pytest-asyncio>=0.26.0",
-    "psycopg-binary>=3.2.9",
+    "pytest>=9.1.0",
+    "pre-commit>=4.7.0",
+    "ruff>=0.17.0",
+    "aiosqlite>=0.22.0",
+    "pytest-asyncio>=1.4.0",
+    "psycopg-binary>=3.3.0",
 ]
 
 [build-system]
