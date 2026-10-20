@@ -1,14 +1,12 @@
+from collections.abc import AsyncGenerator, Generator, Mapping
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Generator, Mapping
-
     from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
-    from sqlalchemy.orm import Session
 
 
 class Database:
