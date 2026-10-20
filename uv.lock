@@ -44,12 +44,14 @@ asyncio = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "aiosqlite" },
     { name = "pre-commit" },
+    { name = "ruff" },
+]
+test = [
+    { name = "aiosqlite" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pytest" },
     { name = "pytest-asyncio" },
-    { name = "ruff" },
 ]
 
 [package.metadata]
@@ -61,12 +63,14 @@ provides-extras = ["asyncio"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "aiosqlite", specifier = ">=0.22.0" },
     { name = "pre-commit", specifier = ">=4.7.0" },
+    { name = "ruff", specifier = ">=0.17.0" },
+]
+test = [
+    { name = "aiosqlite", specifier = ">=0.22.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.0" },
     { name = "pytest", specifier = ">=9.1.0" },
     { name = "pytest-asyncio", specifier = ">=1.4.0" },
-    { name = "ruff", specifier = ">=0.17.0" },
 ]
 
 [[package]]

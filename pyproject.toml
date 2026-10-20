@@ -12,12 +12,14 @@ asyncio = ["sqlalchemy[asyncio]>=2.1.0"]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.1.0",
     "pre-commit>=4.7.0",
     "ruff>=0.17.0",
+]
+test = [
     "aiosqlite>=0.22.0",
-    "pytest-asyncio>=1.4.0",
+    "pytest>=9.1.0",
     "psycopg[binary]>=3.3.0",
+    "pytest-asyncio>=1.4.0",
 ]
 
 [build-system]
