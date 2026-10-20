@@ -1,15 +1,14 @@
-from collections.abc import AsyncGenerator, Generator, Mapping
 from contextlib import asynccontextmanager, contextmanager
+from typing import TYPE_CHECKING
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy.orm.session import Session
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, Generator, Mapping
+
+    from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+    from sqlalchemy.orm import Session
 
 
 class Database:
@@ -46,7 +45,7 @@ class Database:
         try:
             yield session
             session.commit()
-        except Exception:
+        except BaseException:
             session.rollback()
             raise
         finally:
@@ -87,10 +86,15 @@ class Database:
             SQL query to execute.
         params : Mapping | None
             Parameters to bind to the query.
+
+        Returns
+        -------
+        dict
+            First row, or an empty dictionary if there is none.
         """
         with self.create_session() as session:
             result = session.execute(text(query), params=params).fetchone()
-            return result._asdict() if result else {}
+            return result._asdict() if result is not None else {}
 
     def fetch_many(self, query: str, *, params: Mapping | None = None, n: int = 1) -> list[dict]:
         """Fetch the first `n` results of the given SQL query with optional parameters.
@@ -106,7 +110,7 @@ class Database:
         """
         with self.create_session() as session:
             results = session.execute(text(query), params=params).fetchmany(n)
-            return [result._asdict() for result in results if result]
+            return [result._asdict() for result in results]
 
     def fetch_all(self, query: str, *, params: Mapping | None = None) -> list[dict]:
         """Fetch all results of the given SQL query with optional parameters.
@@ -120,7 +124,7 @@ class Database:
         """
         with self.create_session() as session:
             results = session.execute(text(query), params=params).fetchall()
-            return [result._asdict() for result in results if result]
+            return [result._asdict() for result in results]
 
 
 class AsyncDatabase:
@@ -143,6 +147,8 @@ class AsyncDatabase:
         pool_recycle : int
             The number of seconds to recycle a connection, by default 3600.
         """
+        from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
         self._engine: AsyncEngine = create_async_engine(url, **kwargs)
         self._session = async_sessionmaker(bind=self._engine, expire_on_commit=False)
 
@@ -157,7 +163,7 @@ class AsyncDatabase:
         try:
             yield session
             await session.commit()
-        except Exception:
+        except BaseException:
             await session.rollback()
             raise
         finally:
@@ -198,11 +204,16 @@ class AsyncDatabase:
             SQL query to execute.
         params : Mapping | None
             Parameters to bind to the query.
+
+        Returns
+        -------
+        dict
+            First row, or an empty dictionary if there is none.
         """
         async with self.acreate_session() as session:
             result = await session.execute(text(query), params=params)
             row = result.fetchone()
-            return row._asdict() if row else {}
+            return row._asdict() if row is not None else {}
 
     async def afetch_many(
         self,
@@ -224,8 +235,7 @@ class AsyncDatabase:
         """
         async with self.acreate_session() as session:
             result = await session.execute(text(query), params=params)
-            rows = result.fetchmany(n)
-            return [row._asdict() for row in rows if row]
+            return [row._asdict() for row in result.fetchmany(n)]
 
     async def afetch_all(self, query: str, *, params: Mapping | None = None) -> list[dict]:
         """Fetch all results of the given SQL query with optional parameters.
@@ -239,5 +249,4 @@ class AsyncDatabase:
         """
         async with self.acreate_session() as session:
             result = await session.execute(text(query), params=params)
-            rows = result.fetchall()
-            return [row._asdict() for row in rows if row]
+            return [row._asdict() for row in result.fetchall()]
