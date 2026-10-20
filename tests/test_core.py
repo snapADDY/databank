@@ -1,108 +1,146 @@
-from pathlib import Path
+import subprocess
+import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
-import pytest_asyncio
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
-from databank import AsyncDatabase, Database, QueryCollection
-
-
-@pytest.fixture
-def database():
-    db = Database("sqlite://")
-
-    db.execute("CREATE TABLE beatles (id INTEGER PRIMARY KEY, member TEXT NOT NULL);")
-
-    params = [{"member": "John"}, {"member": "Paul"}, {"member": "George"}, {"member": "Ringo"}]
-    db.execute_many("INSERT INTO beatles (member) VALUES (:member);", params=params)
-    yield db
-    db.close()
+from databank import Database, QueryCollection
+from tests.conftest import INSERT
 
 
-@pytest_asyncio.fixture
-async def async_database():
-    db = AsyncDatabase("sqlite+aiosqlite://")
-
-    await db.aexecute("CREATE TABLE beatles (id INTEGER PRIMARY KEY, member TEXT NOT NULL);")
-
-    params = [{"member": "John"}, {"member": "Paul"}, {"member": "George"}, {"member": "Ringo"}]
-    await db.aexecute_many("INSERT INTO beatles (member) VALUES (:member);", params=params)
-    yield db
-    await db.aclose()
-
-
-@pytest.fixture
-def queries() -> QueryCollection:
-    filepath = Path(__file__).parent / "queries.sql"
-    return QueryCollection.from_file(filepath)
+def count(database: Database) -> int:
+    return database.fetch_one("SELECT COUNT(*) AS n FROM beatles;")["n"]
 
 
 def test_execute(database: Database):
-    params = {"member": "Klaus"}
-    database.execute("INSERT INTO beatles (member) VALUES (:member);", params=params)
-    assert len(database.fetch_all("SELECT * FROM beatles;")) == 5
+    database.execute(INSERT, params={"member": "Klaus"})
+    assert count(database) == 5
 
 
 def test_execute_many(database: Database):
-    params = [{"member": "Klaus"}, {"member": "Yoko"}]
-    database.execute_many("INSERT INTO beatles (member) VALUES (:member);", params=params)
-    assert len(database.fetch_all("SELECT * FROM beatles;")) == 6
+    database.execute_many(INSERT, params=[{"member": "Klaus"}, {"member": "Yoko"}])
+    assert count(database) == 6
+
+
+def test_execute_rolls_back_on_error(database: Database):
+    with pytest.raises(IntegrityError):
+        database.execute_many(INSERT, params=[{"member": "Klaus"}, {"member": None}])
+    assert count(database) == 4
+
+
+def test_params_are_keyword_only(database: Database):
+    with pytest.raises(TypeError):
+        database.execute(INSERT, {"member": "Klaus"})  # type: ignore[misc]
 
 
 def test_fetch_one(database: Database):
-    assert database.fetch_one("SELECT * FROM beatles ORDER BY id;")["member"] == "John"
+    assert database.fetch_one("SELECT * FROM beatles ORDER BY id;") == {"id": 1, "member": "John"}
+
+
+def test_fetch_one_with_params(database: Database):
+    result = database.fetch_one("SELECT member FROM beatles WHERE id = :id;", params={"id": 4})
+    assert result == {"member": "Ringo"}
+
+
+def test_fetch_one_without_result(database: Database):
+    assert database.fetch_one("SELECT * FROM beatles WHERE id = -1;") == {}
 
 
 def test_fetch_many(database: Database):
-    assert len(database.fetch_many("SELECT * FROM beatles;", n=2)) == 2
+    results = database.fetch_many("SELECT * FROM beatles ORDER BY id;", n=2)
+    assert [r["member"] for r in results] == ["John", "Paul"]
+
+
+def test_fetch_many_default_n(database: Database):
+    assert len(database.fetch_many("SELECT * FROM beatles;")) == 1
+
+
+def test_fetch_many_more_than_available(database: Database):
+    assert len(database.fetch_many("SELECT * FROM beatles;", n=10)) == 4
 
 
 def test_fetch_all(database: Database):
-    assert len(database.fetch_all("SELECT * FROM beatles;")) == 4
+    results = database.fetch_all("SELECT * FROM beatles ORDER BY id;")
+    assert [r["member"] for r in results] == ["John", "Paul", "George", "Ringo"]
+
+
+def test_fetch_all_without_result(database: Database):
+    assert database.fetch_all("SELECT * FROM beatles WHERE id = -1;") == []
 
 
 def test_fetch_all_from_query_collection(database: Database, queries: QueryCollection):
     assert len(database.fetch_all(queries["select_all_data"])) == 4
+    result = database.fetch_all(queries["select_record_by_id"], params={"id": 2})
+    assert result == [{"id": 2, "member": "Paul"}]
 
 
-@pytest.mark.asyncio
-async def test_aexecute(async_database: AsyncDatabase):
-    params = {"member": "Klaus"}
-    await async_database.aexecute("INSERT INTO beatles (member) VALUES (:member);", params=params)
-    result = await async_database.afetch_all("SELECT * FROM beatles;")
-    assert len(result) == 5
+def test_create_session_commits(database: Database):
+    with database.create_session() as session:
+        session.execute(text(INSERT), params={"member": "Klaus"})
+    assert count(database) == 5
 
 
-@pytest.mark.asyncio
-async def test_aexecute_many(async_database: AsyncDatabase):
-    params = [{"member": "Klaus"}, {"member": "Yoko"}]
-    await async_database.aexecute_many(
-        "INSERT INTO beatles (member) VALUES (:member);", params=params
+def test_create_session_rolls_back_on_error(database: Database):
+    with pytest.raises(RuntimeError), database.create_session() as session:
+        session.execute(text(INSERT), params={"member": "Klaus"})
+        raise RuntimeError
+    assert count(database) == 4
+
+
+def test_session_is_reset_after_error(database: Database):
+    with pytest.raises(RuntimeError), database.create_session() as first:
+        raise RuntimeError
+
+    with database.create_session() as second:
+        assert second is not first
+
+
+def test_sessions_are_thread_local(database: Database):
+    barrier = threading.Barrier(2)
+
+    def get_session():
+        with database.create_session() as session:
+            # make sure both sessions are open at the same time
+            barrier.wait(timeout=5)
+            return session
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        first, second = executor.map(lambda _: get_session(), range(2))
+
+    assert first is not second
+
+
+def test_multithreaded_usage(database: Database):
+    def work(i: int) -> int:
+        database.execute(INSERT, params={"member": f"Member {i}"})
+        return len(database.fetch_all("SELECT * FROM beatles;"))
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        list(executor.map(work, range(20)))
+
+    assert count(database) == 24
+
+
+def test_close(database: Database):
+    database.close()
+    # the engine reconnects on demand after being disposed
+    assert count(database) == 4
+
+
+def test_import_without_greenlet():
+    # the sync API must work without the `asyncio` extra (i.e. without greenlet)
+    code = (
+        "import sys; sys.modules['greenlet'] = None\n"
+        "from databank import AsyncDatabase, Database\n"
+        "assert Database('sqlite://').fetch_one('SELECT 1 AS x') == {'x': 1}\n"
+        "try:\n"
+        "    AsyncDatabase('sqlite+aiosqlite://')\n"
+        "except ImportError:\n"
+        "    pass\n"
+        "else:\n"
+        "    raise AssertionError('expected ImportError')\n"
     )
-    result = await async_database.afetch_all("SELECT * FROM beatles;")
-    assert len(result) == 6
-
-
-@pytest.mark.asyncio
-async def test_afetch_one(async_database: AsyncDatabase):
-    result = await async_database.afetch_one("SELECT * FROM beatles ORDER BY id;")
-    assert result["member"] == "John"
-
-
-@pytest.mark.asyncio
-async def test_afetch_many(async_database: AsyncDatabase):
-    results = await async_database.afetch_many("SELECT * FROM beatles;", n=2)
-    assert len(results) == 2
-
-
-@pytest.mark.asyncio
-async def test_afetch_all(async_database: AsyncDatabase):
-    results = await async_database.afetch_all("SELECT * FROM beatles;")
-    assert len(results) == 4
-
-
-@pytest.mark.asyncio
-async def test_afetch_all_from_query_collection(
-    async_database: AsyncDatabase,
-    queries: QueryCollection,
-):
-    assert len(await async_database.afetch_all(queries["select_all_data"])) == 4
+    subprocess.run([sys.executable, "-c", code], check=True)  # noqa: S603
